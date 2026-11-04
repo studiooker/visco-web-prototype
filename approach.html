@@ -243,24 +243,91 @@
     transition: width .5s ease, background-color .5s ease;
   }
   .gs-step.is-active .gs-step__bar { width: 8.684px; background: var(--visco-surface-accent); }
-  .gs-step__num { font: 500 32px/48px var(--font-display); color: var(--visco-text-on-dark); opacity: .5; white-space: nowrap; }
+  .gs-step__num { font: 500 32px/1.05 var(--font-display); color: var(--visco-text-on-dark); opacity: .5; white-space: nowrap; }
   .gs-step__body { display: flex; flex-direction: column; gap: 10px; color: #fff; }
-  .gs-step__title { margin: 0; font: 500 32px/48px var(--font-display); color: var(--visco-text-on-dark); }
+  .gs-step__title { margin: 0; font: 500 32px/1.05 var(--font-display); color: var(--visco-text-on-dark); }
   .gs-step__text { margin: 0; font: 400 15px/19.765px var(--font-ui); }
   .gs-step__thumb { display: none; }
   @media (prefers-reduced-motion: reduce) {
     .gs__list, .gs-step, .gs-step__bar, .gs__media img { transition: none; }
   }
 
+  /* ---------- Shared section parts ---------- */
+  /* Small uppercase label (Figma sets it in Geist; the site uses Die Grotesk for these, as on the home page) */
+  .ap-label { margin: 0; min-height: 30px; font: 400 14px/29.647px var(--font-ui); text-transform: uppercase; color: var(--visco-text-on-dark); opacity: .5; }
+  .ap-h3 { margin: 0; font: 500 32px/1.05 var(--font-display); color: #fff; }
+  .ap-cta--dark { background: var(--visco-surface-panel); }
+  /* Two columns: heading on the left, copy and button on the right */
+  .ap-split { background: var(--visco-surface-panel); padding: 96px 24px; }
+  .ap-split__row { display: flex; gap: 32px; align-items: flex-start; }
+  .ap-split__head, .ap-split__col { flex: 1 0 0; min-width: 0; }
+  .ap-split__col { display: flex; flex-direction: column; align-items: flex-start; }
+  .ap-split__body { max-width: 572.096px; color: #fff; }
+  .ap-split__body p { margin: 0; }
+  .ap-split__body p + p { margin-top: 21.8px; }   /* empty line between paragraphs in Figma */
+
+  /* ---------- How we work (Figma 278:1871) ---------- */
+  .ap-steps { background: var(--visco-surface-panel); padding: 48px; display: flex; flex-direction: column; gap: 10px; }
+  .ap-steps__row { display: flex; gap: 24px; align-items: flex-start; max-width: 1600px; }
+  .ap-steps__col { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 24px; color: #fff; }
+  .ap-steps__col > * { margin: 0; font: 400 14px/19.765px var(--font-ui); }
+
   /* ---------- People (Figma 278:1933) ---------- */
-  .ap-people { background: var(--visco-surface-panel); padding: 96px 24px; }
-  .ap-people__row { display: flex; gap: 32px; align-items: flex-start; }
-  .ap-people__head, .ap-people__col { flex: 1 0 0; min-width: 0; }
-  .ap-people__title { margin: 0; max-width: 599.427px; font: 500 60px/72px var(--font-display); color: #fff; }
-  .ap-people__col { display: flex; flex-direction: column; align-items: flex-start; }
-  .ap-people__body { max-width: 572.096px; padding: 18px 0 8px; font: 400 18px/21.8px var(--font-ui); color: #fff; }
-  .ap-people__body p { margin: 0; }
-  .ap-people__body p + p { margin-top: 21.8px; }   /* empty line between paragraphs in Figma */
+  .ap-people { padding-bottom: 48px; }
+  .ap-people .ap-h3 { max-width: 372.788px; }
+  .ap-people .ap-split__col { padding: 8px 0; }
+  .ap-people .ap-split__body { min-height: 215.69px; font: 400 18px/21.8px var(--font-ui); }
+
+  /* ---------- The basics (Figma 278:1983) ---------- */
+  .ap-basics { background: var(--visco-surface-panel); padding: 96px 24px; }
+  .ap-basics__card { background: #000; border-radius: 4px; padding: 24px; }
+  .ap-basics__row { display: flex; gap: 32px; align-items: stretch; overflow: clip; }
+  .ap-basics__media, .ap-basics__text { flex: 1 0 0; min-width: 0; }
+  /* Grey placeholder box, as in Figma ("image 14") */
+  .ap-basics__media > div { width: 546.4px; max-width: 100%; aspect-ratio: 546.4 / 307.35; background: rgba(171, 171, 171, .2); }
+  .ap-basics__text { display: flex; flex-direction: column; gap: 24px; color: #fff; }
+  .ap-basics__text .ap-h3 { max-width: 599.427px; }
+  .ap-basics__text p { margin: 0; max-width: 572.096px; font: 400 15px/21.8px var(--font-ui); }
+
+  /* ---------- Engineers (Figma 392:6095) ---------- */
+  .ap-engineers .ap-h3 { max-width: 423.876px; }
+  .ap-engineers .ap-split__body { padding: 8px 0 24px; font: 400 15px/21.8px var(--font-ui); }
+
+  /* ---------- Proof (Figma 278:1993) ---------- */
+  .ap-proof { background: var(--visco-surface-panel); padding: 48px 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+  /* Figma keeps the cards 48px short of the right edge (1344 of 1392) */
+  .ap-proof__row { display: flex; gap: 24px; width: calc(100% - 48px); max-width: 1600px; margin: 0; padding: 0; list-style: none; }
+  .ap-proof__card {
+    flex: 1 0 0; min-width: 0; min-height: 146px; padding: 24px; border-radius: 4px; background: #000;
+    display: flex; flex-direction: column; gap: 24px; color: #fff;
+  }
+  .ap-proof__card p:not(.ap-h3) { margin: 0; font: 400 14px/19.765px var(--font-ui); }
+  .ap-proof__cta { padding-top: 24px; }
+
+  /* ---------- Closing CTA: same layout as the front page's .closing ----------
+     Blue card, text on the left, dash field on the right, button at the bottom left. */
+  .ap-close { background: var(--visco-surface-panel); padding: 48px 24px; container-type: inline-size; }
+  /* 1392 × 732 at 1440, never below 520px tall. Height comes from the width (cqw)
+     rather than aspect-ratio, which would widen the card past the page to honour the minimum. */
+  .ap-close__card {
+    position: relative; overflow: clip; border-radius: 4px; background: var(--visco-surface-accent);
+    height: max(520px, 100cqw * 732 / 1392); display: flex;
+  }
+  /* Figma "Frame 35": 718 × 732 from x 717, turned 180°, its right edge 43px past the card.
+     On narrower cards it never starts left of 554px, so it stays clear of the copy (cropped, not squashed). */
+  .ap-close__field {
+    position: absolute; top: 0; left: max(51.51%, 554px); height: 100%;
+    width: calc(100% + 43px - max(51.51%, 554px)); object-fit: cover;
+    transform: rotate(180deg); pointer-events: none;
+  }
+  .ap-close__content {
+    position: relative; flex: 1 0 0; min-width: 0; padding: 32px;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 24px; color: #fff;
+  }
+  .ap-close__title { margin: 0; max-width: 9em; font: 500 clamp(44px, 5.5556vw, 80px)/.9 var(--font-display); }
+  .ap-close__title::after { content: ""; display: block; height: .41em; }
+  .ap-close__copy { margin: 0; max-width: 498.43px; font: 400 16px/21.8px var(--font-ui); }
+  .ap-close .ap-cta { margin-top: auto; }   /* button sits at the bottom left of the card */
 
   @media (max-width: 900px) {
     :root { --section-pad: 16px; --header-h: 70px; }
@@ -290,15 +357,39 @@
     .gs__list { transform: none !important; gap: 40px; }
     .gs-step { width: auto; opacity: 1; grid-template-columns: 44px minmax(0, 1fr); padding-left: 24px; }
     .gs-step__bar { left: 12.5px; width: 8.684px; background: var(--visco-surface-accent); }
-    .gs-step__num, .gs-step__title { font-size: 24px; line-height: 30px; }
-    .gs-step__bar { top: 3px; height: 24px; }
+    .gs-step__num, .gs-step__title { font-size: 24px; line-height: 1.05; }
+    .gs-step__bar { top: 0; height: 24px; }
     .gs-step__thumb { display: block; width: 167px; height: 161px; object-fit: cover; border-radius: 4px; margin-bottom: 6px; }
 
-    .ap-people { padding: 48px var(--section-pad); }
-    .ap-people__row { flex-direction: column; gap: 24px; }
-    .ap-people__head, .ap-people__col { flex: none; width: 100%; }
-    .ap-people__title { font-size: 40px; line-height: 48px; }
-    .ap-people__body { padding-top: 0; font-size: 16px; }
+    .ap-split { padding: 48px var(--section-pad); }
+    .ap-split__row { flex-direction: column; gap: 20px; }
+    .ap-split__head, .ap-split__col { flex: none; width: 100%; }
+    .ap-people .ap-split__col { padding: 0; }
+    .ap-people .ap-split__body { min-height: 0; padding-bottom: 24px; font-size: 16px; }
+    .ap-engineers .ap-split__body { padding-top: 0; }
+    .ap-h3 { font-size: 28px; }
+
+    .ap-steps { padding: 48px var(--section-pad); }
+    .ap-steps__row { flex-direction: column; gap: 32px; }
+    .ap-steps__col { flex: none; width: 100%; gap: 8px; }
+
+    .ap-basics { padding: 48px var(--section-pad); }
+    .ap-basics__card { padding: 16px; }
+    .ap-basics__row { flex-direction: column; gap: 24px; }
+    .ap-basics__media, .ap-basics__text { flex: none; width: 100%; }
+    .ap-basics__media > div { width: 100%; }
+
+    .ap-proof { padding: 48px var(--section-pad); }
+    .ap-proof__row { flex-direction: column; gap: 16px; width: 100%; }
+    .ap-proof__card { flex: none; min-height: 0; }
+
+    /* Stacked, as on the front page: text and button first, the dash field as a band underneath */
+    .ap-close { padding: 16px var(--section-pad) 48px; }
+    .ap-close__card { height: auto; flex-direction: column; }
+    .ap-close__content { flex: none; padding: 48px 20px 32px; }
+    .ap-close__title::after { height: 0; }
+    .ap-close .ap-cta { margin-top: 8px; }
+    .ap-close__field { position: static; display: block; width: 100%; height: auto; }
   }
   @media (max-width: 560px) {
     .header .cta--solid > span:first-child { display: none; }
@@ -329,7 +420,7 @@
       </div>
       <div class="menu__section" style="--i:1">
         <p class="menu__label">Industries</p>
-        <ul class="menu__links"><li><a href="#">Energy: Oil &amp; gas</a></li><li><a href="#">Plants and refineries</a></li><li><a href="#">Renewables</a></li><li><a href="#">Subsea</a></li><li><a href="#">Infrastructure</a></li></ul>
+        <ul class="menu__links"><li><a href="#">Oil &amp; gas</a></li><li><a href="#">Plants and refineries</a></li><li><a href="#">Offshore wind</a></li><li><a href="#">Subsea</a></li><li><a href="#">Infrastructure</a></li></ul>
       </div>
       <div class="menu__section" style="--i:2">
         <p class="menu__label">Newsroom</p>
@@ -370,6 +461,24 @@
     </div>
     <div class="ap-hero__media">
       <img src="assets/approach/hero.webp" width="3840" height="2160" alt="Field worker in a high-visibility jacket holding a tablet">
+    </div>
+  </section>
+
+  <section class="ap-steps" aria-labelledby="steps-title">
+    <p class="ap-label" id="steps-title">How we work:</p>
+    <div class="ap-steps__row">
+      <div class="ap-steps__col">
+        <h3>Start with the work</h3>
+        <p>We begin with a real workflow and build around what people actually need to do. From inspection to maintenance, VISCO Workbench turns operational context into execution.</p>
+      </div>
+      <div class="ap-steps__col">
+        <h3>Build on your reality</h3>
+        <p>Models, drawings, P&amp;IDs, tag registers and existing systems come together in one visual operational environment. We connect what you already have and make it workable.</p>
+      </div>
+      <div class="ap-steps__col">
+        <h3>Scale what works</h3>
+        <p>Workbench modules are built to be reused, improved and expanded across operations. You start further ahead, while staying close to the engineers and domain experts behind the platform.</p>
+      </div>
     </div>
   </section>
 
@@ -448,18 +557,76 @@
     </div>
   </section>
 
-  <section class="ap-people" aria-labelledby="people-title">
-    <div class="ap-people__row">
-      <div class="ap-people__head">
-        <h2 class="ap-people__title" id="people-title">Start with the people who know the work.</h2>
+  <section class="ap-split ap-people" aria-labelledby="people-title">
+    <div class="ap-split__row">
+      <div class="ap-split__head">
+        <h2 class="ap-h3" id="people-title">Start with the people who know the work.</h2>
       </div>
-      <div class="ap-people__col">
-        <div class="ap-people__body">
+      <div class="ap-split__col">
+        <div class="ap-split__body">
           <p>We work closely with the people who understand the workflow best, so we can choose the right place to start.</p>
           <p>Bring the data you already have: models, drawings, tag lists and documents. Together, we connect what matters and get to a real working use case faster.</p>
         </div>
         <a class="ap-cta" href="#"><span>Contact</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a>
       </div>
+    </div>
+  </section>
+
+  <section class="ap-basics" aria-labelledby="basics-title">
+    <div class="ap-basics__card">
+      <div class="ap-basics__row">
+        <div class="ap-basics__media"><div aria-hidden="true"></div></div>
+        <div class="ap-basics__text">
+          <h2 class="ap-h3" id="basics-title">The basics done properly</h2>
+          <p>You get regular product releases, a named VISCO contact from onboarding onwards, and support answered within one working day. Behind it all sits a data quality process assessed by DNV against RP-A204.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ap-split ap-engineers" aria-labelledby="engineers-title">
+    <div class="ap-split__row">
+      <div class="ap-split__head">
+        <h2 class="ap-h3" id="engineers-title">You work with engineers from the first meeting.</h2>
+      </div>
+      <div class="ap-split__col">
+        <div class="ap-split__body">
+          <p>Visco has worked in industrial visualisation since 1993. Our 100+ people across 14 offices in 7 countries include developers, 3D specialists, UX designers, testers and data and integration specialists. The people you talk to understand both the software and the asset.</p>
+        </div>
+        <a class="ap-cta" href="#"><span>About Visco</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="ap-proof" aria-labelledby="proof-title">
+    <p class="ap-label" id="proof-title">What changed in the field.</p>
+    <ul class="ap-proof__row">
+      <li class="ap-proof__card">
+        <p class="ap-h3">13.5 h → 50 min</p>
+        <p>An inspection task covering 49 valves, estimated at 13.5 hours in SAP. Senior Inspection Engineer, ConocoPhillips</p>
+      </li>
+      <li class="ap-proof__card">
+        <p class="ap-h3">13.5 h → 50 min</p>
+        <p>Finding the position of a subsea valve. HW Lead, Shell</p>
+      </li>
+      <li class="ap-proof__card">
+        <p class="ap-h3">30 min → under 3 min</p>
+        <p>A routine task, done in the dynamic digital twin. Area Authority, BP</p>
+      </li>
+    </ul>
+    <div class="ap-proof__cta">
+      <a class="ap-cta" href="#"><span>Explore cases</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a>
+    </div>
+  </section>
+
+  <section class="ap-close" aria-labelledby="close-title">
+    <div class="ap-close__card">
+      <div class="ap-close__content">
+        <h2 class="ap-close__title" id="close-title">Bring us the challenge. We’ll build the flow.</h2>
+        <p class="ap-close__copy">Tell us about one task your teams do today. One of our engineers will show you how it runs in Visco Workbench.</p>
+        <a class="ap-cta ap-cta--dark" href="#"><span>Talk to an engineer</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a>
+      </div>
+      <img class="ap-close__field" src="assets/closing-field.svg" width="718" height="732" alt="">
     </div>
   </section>
 </main>
