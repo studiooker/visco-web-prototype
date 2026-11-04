@@ -148,8 +148,69 @@
     cursor: pointer; text-decoration: none; position: relative;
   }
   .nav__burger { padding: 8px; align-self: stretch; }
-  .hamburger { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 28px; }
-  .hamburger span { display: block; height: 0.778px; width: 21.774px; background: #d9d9d9; }
+  .hamburger {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; width: 28px; height: 22px;
+  }
+  .hamburger > span:not(.hamburger__close) { display: block; height: 0.778px; width: 21.774px; background: #d9d9d9; transition: opacity .2s ease; }
+  /* Open state (Figma): four short diagonal strokes pointing to the centre */
+  .hamburger__close { position: absolute; left: 0; top: 50%; width: 28px; height: 28px; transform: translateY(-50%); opacity: 0; transition: opacity .2s ease; }
+  .hamburger__close i { position: absolute; width: 4.95px; height: 4.95px; transform: translateY(-50%); }
+  .hamburger__close i::before {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 1px; background: #fff;
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  .hamburger__close i:nth-child(1) { right: 6.57px; top: calc(50% + 4.95px); }
+  .hamburger__close i:nth-child(2) { left: 6.58px; top: calc(50% - 4.95px); }
+  .hamburger__close i:nth-child(3) { left: 6.58px; top: calc(50% + 4.95px); }
+  .hamburger__close i:nth-child(4) { left: 16.48px; top: calc(50% - 4.95px); }
+  .hamburger__close i:nth-child(3)::before, .hamburger__close i:nth-child(4)::before { transform: translate(-50%, -50%) rotate(-45deg); }
+  .menu-open .hamburger > span:not(.hamburger__close) { opacity: 0; }
+  .menu-open .hamburger__close { opacity: 1; }
+
+  /* ---------- Burger menu ---------- */
+  .nav-wrap { position: relative; flex-shrink: 0; }
+  .menu {
+    --menu-x: -50%;
+    position: absolute; top: calc(100% + 8px); left: 50%; width: min(339px, calc(100vw - 32px));
+    max-height: calc(100vh - 110px); overflow: auto;
+    display: flex; flex-direction: column; gap: 20px; padding: 16px var(--visco-space-xs);
+    border-radius: 3px; color: var(--visco-text-on-dark);
+    opacity: 0; visibility: hidden; transform: translate(var(--menu-x), -12px);
+    transition: opacity .3s ease, transform .5s cubic-bezier(.2, .8, .2, 1), visibility 0s linear .5s;
+  }
+  .menu::before {
+    content: ""; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
+    background: rgba(133, 133, 133, .25); mix-blend-mode: difference;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .menu-open .menu { opacity: 1; visibility: visible; transform: translate(var(--menu-x), 0); transition-delay: 0s; }
+  /* Items settle in one after another */
+  .menu > * {
+    position: relative; opacity: 0; transform: translateY(8px);
+    transition: opacity .3s ease, transform .5s cubic-bezier(.2, .8, .2, 1);
+  }
+  .menu-open .menu > * { opacity: 1; transform: none; transition-delay: calc(80ms + var(--i, 0) * 45ms); }
+  .menu__section { display: flex; flex-direction: column; gap: 12px; padding: 0 16px; }
+  .menu__label {
+    margin: 0; font: 500 12px/1.2 var(--font-display); letter-spacing: 0.48px; text-transform: uppercase; opacity: .5;
+  }
+  .menu__links { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .menu__links a { display: block; font: 400 15px/1.45 var(--font-ui); color: #fff; text-decoration: none; }
+  .menu__links a:hover, .menu__links a:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+  .menu__divider { height: 1px; background: var(--visco-graphic-on-dark, #fff); opacity: 0; }
+  .menu-open .menu__divider { opacity: .15; }
+  .menu__utility { display: flex; justify-content: space-between; gap: 12px; padding: 0 16px; }
+  .menu__utility a { font: 500 12px/1.2 var(--font-display); letter-spacing: 0.48px; text-transform: uppercase; color: #fff; opacity: .5; text-decoration: none; white-space: nowrap; }
+  .menu__utility a:hover, .menu__utility a:focus-visible { opacity: 1; }
+  .menu-overlay {
+    position: fixed; inset: 0; z-index: 9; background: rgba(0, 0, 0, .9);
+    opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility 0s linear .35s;
+  }
+  .menu-open .menu-overlay { opacity: 1; visibility: visible; transition-delay: 0s; }
+  @media (prefers-reduced-motion: reduce) {
+    .menu, .menu > *, .menu-overlay, .hamburger > span { transition: none; }
+  }
 
   .cta {
     display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -443,6 +504,8 @@
     .title--hero { white-space: normal; width: calc(100% - 32px); }
     :root { --section-pad: 16px; --header-h: 70px; } /* 16 + 38 + 16 */
     .header { padding: 16px; }
+    .nav-wrap { position: static; }
+    .menu { --menu-x: 0; position: fixed; top: 62px; left: 16px; width: auto; right: 16px; }
     .progress { right: 12px; }
 
     /* Benefits: media on top, tabs stacked underneath */
@@ -521,14 +584,40 @@
     <img src="assets/logo.svg" alt="">
     <span class="logo__symbol"><img src="assets/symbol.svg" alt=""></span>
   </a>
-  <nav class="nav" aria-label="Primary">
-    <a class="nav__btn" href="#">Platform</a>
-    <a class="nav__btn" href="#">Cases</a>
-    <a class="nav__btn" href="#">Approach</a>
-    <button class="nav__btn nav__burger" type="button" aria-label="Menu">
-      <span class="hamburger"><span></span><span></span></span>
-    </button>
-  </nav>
+  <div class="nav-wrap">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav__btn" href="#">Platform</a>
+      <a class="nav__btn" href="#">Cases</a>
+      <a class="nav__btn" href="#">Approach</a>
+      <button class="nav__btn nav__burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu">
+        <span class="hamburger" aria-hidden="true"><span></span><span></span><span class="hamburger__close"><i></i><i></i><i></i><i></i></span></span>
+      </button>
+    </nav>
+    <div class="menu" id="site-menu" aria-label="Menu" inert>
+      <div class="menu__section" style="--i:0">
+        <p class="menu__label">Product</p>
+        <ul class="menu__links"><li><a href="#">Visco Stories</a></li><li><a href="#">Visco Interactive</a></li><li><a href="#">Visco Configure</a></li></ul>
+      </div>
+      <div class="menu__section" style="--i:1">
+        <p class="menu__label">Industries</p>
+        <ul class="menu__links"><li><a href="#">Energy: Oil &amp; gas</a></li><li><a href="#">Plants and refineries</a></li><li><a href="#">Renewables</a></li><li><a href="#">Subsea</a></li><li><a href="#">Infrastructure</a></li></ul>
+      </div>
+      <div class="menu__section" style="--i:2">
+        <p class="menu__label">Newsroom</p>
+        <ul class="menu__links"><li><a href="#">Insights</a></li><li><a href="#">News</a></li></ul>
+      </div>
+      <div class="menu__section" style="--i:3">
+        <p class="menu__label">Company</p>
+        <ul class="menu__links"><li><a href="#">About Visco</a></li><li><a href="#">Careers</a></li><li><a href="#">Contact</a></li></ul>
+      </div>
+      <div class="menu__divider" style="--i:4"></div>
+      <div class="menu__utility" style="--i:5">
+        <a href="#">Support</a>
+        <a href="#">Customer log in</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </div>
+  </div>
   <a class="cta cta--solid" href="#">
     <span>Talk to an expert</span>
     <span class="icon-expand" aria-hidden="true">
@@ -536,6 +625,7 @@
     </span>
   </a>
 </header>
+<div class="menu-overlay" aria-hidden="true"></div>
 
 <main>
   <section class="scroller" id="hero">
@@ -1379,6 +1469,29 @@
       window.addEventListener('resize', () => { if (!raf) raf = requestAnimationFrame(frame); });
       requestAnimationFrame(frame);
     } catch (e) { console.warn('Closing dash field disabled:', e); }
+  }
+
+  /* ---------------- Burger menu ----------------
+     The burger opens the menu panel under the nav: it drops in slightly,
+     its items settle one after another and the page dims behind a 90% black
+     overlay. The burger, the overlay, Esc or any link in the menu close it. */
+  const burger = document.querySelector('.nav__burger');
+  const menu = document.getElementById('site-menu');
+  if (burger && menu) {
+    const setMenu = open => {
+      document.documentElement.classList.toggle('menu-open', open);
+      burger.setAttribute('aria-expanded', open);
+      burger.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
+      menu.inert = !open;
+      document.body.style.overflow = open ? 'hidden' : '';
+    };
+    const isOpen = () => document.documentElement.classList.contains('menu-open');
+    burger.addEventListener('click', () => setMenu(!isOpen()));
+    document.querySelector('.menu-overlay').addEventListener('click', () => setMenu(false));
+    menu.addEventListener('click', e => { if (e.target.closest('a')) setMenu(false); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && isOpen()) { setMenu(false); burger.focus(); }
+    });
   }
 
   /* ---------------- Dash build-in for titles ----------------
