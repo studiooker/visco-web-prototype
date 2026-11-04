@@ -393,21 +393,35 @@
   .case__quote footer { font: 400 15px/21.8px var(--font-ui); text-transform: uppercase; text-align: right; }
 
   /* ---------- Products (three video cards) ---------- */
-  .products { background: var(--visco-surface-panel); padding: 96px 48px; display: flex; flex-direction: column; gap: 32px; }
+  .products { background: var(--visco-surface-panel); padding: 96px 24px; display: flex; flex-direction: column; gap: 32px; }
   .products__eyebrow {
     margin: 0; font: 400 14px/15.6px var(--font-ui); letter-spacing: 0.4222px;
     text-transform: uppercase; color: #fff;
   }
   .products__row { display: flex; gap: 24px; align-items: flex-start; margin: 0; padding: 0; list-style: none; }
+  .products__item { flex: 1 0 0; min-width: 0; display: flex; }
   .product {
-    position: relative; flex: 1 0 0; min-width: 0; height: 520px; overflow: clip;
+    position: relative; flex: 1 0 0; min-width: 0; aspect-ratio: 6 / 7; min-height: 380px; overflow: clip; cursor: pointer;
     display: flex; flex-direction: column; justify-content: space-between;
     padding: 24px; border-radius: 4px; color: #fff; text-decoration: none; background: #000;
   }
+  .product:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
   .product__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .product__shade { position: absolute; inset: 0; mix-blend-mode: multiply; pointer-events: none; }
+  .product__shade {
+    position: absolute; inset: 0; mix-blend-mode: multiply; pointer-events: none;
+    background-color: rgba(0, 0, 0, 0); transition: background-color .4s ease;
+  }
   .product__title { position: relative; margin: 0; font: 500 32px/1.05 var(--font-display); white-space: nowrap; }
   .product__desc { position: relative; margin: 0; min-height: 80px; font: 400 16px/21.8px var(--font-ui); }
+  /* With a mouse: the video plays, the text shows and the overlay darkens on hover */
+  @media (hover: hover) and (pointer: fine) {
+    .product__desc { opacity: 0; transform: translateY(8px); transition: opacity .35s ease, transform .35s ease; }
+    .product:hover .product__desc, .product:focus-within .product__desc { opacity: 1; transform: none; }
+    .product:hover .product__shade, .product:focus-within .product__shade { background-color: rgba(0, 0, 0, .25); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .product__desc, .product__shade { transition: none; }
+  }
 
   @media (max-width: 900px) {
     .nav__btn:not(.nav__burger) { display: none; }
@@ -470,7 +484,8 @@
   @media (max-width: 900px) {
     .products { padding: 48px var(--section-pad); }
     .products__row { flex-direction: column; gap: 16px; }
-    .product { flex: none; width: 100%; height: 440px; }
+    .products__item { flex: none; width: 100%; }
+    .product { flex: none; width: 100%; }
   }
   @media (max-width: 560px) {
     .header .cta--solid > span:first-child { display: none; }
@@ -683,24 +698,24 @@
   <section class="products" aria-labelledby="products-title">
     <h2 class="products__eyebrow" id="products-title">There’s more to Visco.</h2>
     <ul class="products__row">
-      <li class="product">
+      <li class="products__item"><a class="product" href="#">
         <video class="product__video" src="assets/video/product-stories.mp4" muted playsinline loop preload="metadata" aria-hidden="true"></video>
         <span class="product__shade" style="background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.44) 12.608%, rgba(0, 0, 0, 0) 34.858%, rgba(0, 0, 0, 0) 64.102%, rgba(0, 0, 0, 0.44) 75.473%)"></span>
         <h3 class="product__title">Visco Stories</h3>
         <p class="product__desc">Turn complex systems, products and processes into visual stories people can quickly understand.</p>
-      </li>
-      <li class="product">
+      </a></li>
+      <li class="products__item"><a class="product" href="#">
         <video class="product__video" src="assets/video/product-interactive.mp4" muted playsinline loop preload="metadata" aria-hidden="true"></video>
         <span class="product__shade" style="background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 12.608%, rgba(0, 0, 0, 0) 34.858%, rgba(0, 0, 0, 0) 64.102%, rgba(0, 0, 0, 0.4) 86.068%)"></span>
         <h3 class="product__title">Visco Interactive</h3>
         <p class="product__desc">Create hands-on visual experiences that make technical detail easier to explore, present and understand.</p>
-      </li>
-      <li class="product">
+      </a></li>
+      <li class="products__item"><a class="product" href="#">
         <video class="product__video" src="assets/video/product-configure.mp4" muted playsinline loop preload="metadata" aria-hidden="true"></video>
         <span class="product__shade" style="background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 12.608%, rgba(0, 0, 0, 0) 34.858%, rgba(0, 0, 0, 0) 64.102%, rgba(0, 0, 0, 0.4) 86.068%)"></span>
         <h3 class="product__title">Visco Configure</h3>
         <p class="product__desc">Turn complex product logic into visual experiences that improve accuracy, flexibility and speed.</p>
-      </li>
+      </a></li>
     </ul>
   </section>
 </main>
@@ -1141,17 +1156,38 @@
   selectTab(0);
 
   /* ---------------- Product videos ----------------
-     The three card videos play while the section is on screen and pause
-     when it scrolls away; with reduced motion they show their first frame. */
-  const productVideos = [...document.querySelectorAll('.product__video')];
-  if (productVideos.length) {
-    new IntersectionObserver(([entry]) => {
-      productVideos.forEach(v => {
-        if (!entry.isIntersecting) v.pause();
-        else if (autoplay) v.play().catch(() => {});
-        else v.preload = 'auto';
+     With a mouse, a card's video plays only while it is hovered (or has
+     keyboard focus) and is paused otherwise. On touch screens (no hover) the videos play while the
+     section is on screen instead. Hover support is re-checked whenever it
+     changes. With reduced motion they show their first frame. */
+  const productCards = [...document.querySelectorAll('.product')];
+  if (productCards.length) {
+    const products = document.querySelector('.products');
+    const hoverQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+    let productsInView = false;
+    const syncProducts = () => {
+      productCards.forEach(card => {
+        const v = card.querySelector('.product__video');
+        const active = card.matches(':hover') || card.matches(':focus-visible');
+        const play = autoplay && (hoverQuery.matches ? active : productsInView);
+        if (play) v.play().catch(() => {}); else v.pause();
       });
-    }, { threshold: .25 }).observe(document.querySelector('.products'));
+    };
+    productCards.forEach(card => {
+      ['mouseenter', 'mouseleave', 'focus', 'blur'].forEach(type => card.addEventListener(type, syncProducts));
+    });
+    hoverQuery.addEventListener('change', syncProducts);
+    new IntersectionObserver(([entry]) => {
+      productsInView = entry.isIntersecting;
+      syncProducts();
+    }, { threshold: .25 }).observe(products);
+    // Load the videos (and their first frame) once the section is about a screen away
+    const preload = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      productCards.forEach(card => { card.querySelector('.product__video').preload = 'auto'; });
+      preload.disconnect();
+    }, { rootMargin: '100% 0px' });
+    preload.observe(products);
   }
 
   /* ---------------- Dash build-in for titles ----------------
