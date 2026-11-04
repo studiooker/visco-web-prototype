@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visco — Approach</title>
+<style>
+  @font-face {
+    font-family: "Denim INK WD";
+    src: local("DenimINKWD-TRIAL-Medium"),
+         url("assets/fonts/DenimINKWD-TRIAL-Medium.otf") format("opentype");
+    font-weight: 500;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Denim INK WD";
+    src: local("DenimINKWD-TRIAL-Regular"),
+         url("assets/fonts/DenimINKWD-TRIAL-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Test Die Grotesk A";
+    src: local("TestDieGrotesk-A-Regular"),
+         url("assets/fonts/TestDieGrotesk-A-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Test Die Grotesk A";
+    src: local("TestDieGrotesk-A-Medium"),
+         url("assets/fonts/TestDieGrotesk-A-Medium.otf") format("opentype");
+    font-weight: 500;
+    font-display: block;
+  }
+
+  :root {
+    --visco-surface-accent: #3941d9;
+    --visco-text-on-dark: #fff;
+    --visco-space-xs: 6px;
+    --visco-surface-panel: #252424;
+    --visco-surface-page: #fff;
+    --visco-text-primary: #252424;
+    /* Figma frames render the films at ~67.5% brightness over the black hero */
+    --film-dim: rgba(0, 0, 0, 0.325);
+    --font-display: "Denim INK WD", system-ui, sans-serif;
+    --font-ui: "Test Die Grotesk A", system-ui, sans-serif;
+    --section-pad: 24px;
+    --header-h: 86px;   /* 24 + 38 + 24 */
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  html, body { margin: 0; background: #000; color: #fff; }
+  body { -webkit-font-smoothing: antialiased; }
+
+  /* ---------- Header ---------- */
+  .header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 24px 24px 32px;
+  }
+  .logo { position: relative; width: 125.506px; height: 32px; flex-shrink: 0; display: block; }
+  .logo img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; max-width: none; }
+  .logo__symbol { position: absolute; top: 0; bottom: 0; left: 0; right: 77.15%; }
+
+  .nav {
+    position: relative;
+    display: flex; align-items: flex-start; gap: 6px;
+    padding: 0 var(--visco-space-xs);
+    border-radius: 3px; overflow: clip; flex-shrink: 0;
+  }
+  .nav::before {
+    content: ""; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
+    background: rgba(133, 133, 133, .25); mix-blend-mode: difference;
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  }
+  .nav__btn {
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 16px; border: 0; background: none; border-radius: 2px;
+    font: 400 15px/1.45 var(--font-ui); color: #fff; white-space: nowrap;
+    cursor: pointer; text-decoration: none; position: relative;
+  }
+  .nav__burger { padding: 8px; align-self: stretch; }
+  .hamburger {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; width: 28px; height: 22px;
+  }
+  .hamburger > span:not(.hamburger__close) { display: block; height: 0.778px; width: 21.774px; background: #d9d9d9; transition: opacity .2s ease; }
+  /* Open state (Figma): four short diagonal strokes pointing to the centre */
+  .hamburger__close { position: absolute; left: 0; top: 50%; width: 28px; height: 28px; transform: translateY(-50%); opacity: 0; transition: opacity .2s ease; }
+  .hamburger__close i { position: absolute; width: 4.95px; height: 4.95px; transform: translateY(-50%); }
+  .hamburger__close i::before {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 1px; background: #fff;
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  .hamburger__close i:nth-child(1) { right: 6.57px; top: calc(50% + 4.95px); }
+  .hamburger__close i:nth-child(2) { left: 6.58px; top: calc(50% - 4.95px); }
+  .hamburger__close i:nth-child(3) { left: 6.58px; top: calc(50% + 4.95px); }
+  .hamburger__close i:nth-child(4) { left: 16.48px; top: calc(50% - 4.95px); }
+  .hamburger__close i:nth-child(3)::before, .hamburger__close i:nth-child(4)::before { transform: translate(-50%, -50%) rotate(-45deg); }
+  .menu-open .hamburger > span:not(.hamburger__close) { opacity: 0; }
+  .menu-open .hamburger__close { opacity: 1; }
+
+  /* ---------- Burger menu ---------- */
+  .nav-wrap { position: relative; flex-shrink: 0; }
+  .menu {
+    --menu-x: -50%;
+    position: absolute; top: calc(100% + 8px); left: 50%; width: min(339px, calc(100vw - 32px));
+    max-height: calc(100vh - 110px); overflow: auto;
+    display: flex; flex-direction: column; gap: 20px; padding: 16px var(--visco-space-xs);
+    border-radius: 3px; color: var(--visco-text-on-dark);
+    opacity: 0; visibility: hidden; transform: translate(var(--menu-x), -12px);
+    transition: opacity .3s ease, transform .5s cubic-bezier(.2, .8, .2, 1), visibility 0s linear .5s;
+  }
+  .menu::before {
+    content: ""; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
+    background: rgba(133, 133, 133, .25); mix-blend-mode: difference;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .menu-open .menu { opacity: 1; visibility: visible; transform: translate(var(--menu-x), 0); transition-delay: 0s; }
+  /* Items settle in one after another */
+  .menu > * {
+    position: relative; opacity: 0; transform: translateY(8px);
+    transition: opacity .3s ease, transform .5s cubic-bezier(.2, .8, .2, 1);
+  }
+  .menu-open .menu > * { opacity: 1; transform: none; transition-delay: calc(80ms + var(--i, 0) * 45ms); }
+  .menu__section { display: flex; flex-direction: column; gap: 12px; padding: 0 16px; }
+  .menu__label {
+    margin: 0; font: 500 12px/1.2 var(--font-display); letter-spacing: 0.48px; text-transform: uppercase; opacity: .5;
+  }
+  .menu__links { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .menu__links a { display: block; font: 400 15px/1.45 var(--font-ui); color: #fff; text-decoration: none; }
+  .menu__links a:hover, .menu__links a:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+  .menu__divider { height: 1px; background: var(--visco-graphic-on-dark, #fff); opacity: 0; }
+  .menu-open .menu__divider { opacity: .15; }
+  .menu__utility { display: flex; justify-content: space-between; gap: 12px; padding: 0 16px; }
+  .menu__utility a { font: 500 12px/1.2 var(--font-display); letter-spacing: 0.48px; text-transform: uppercase; color: #fff; opacity: .5; text-decoration: none; white-space: nowrap; }
+  .menu__utility a:hover, .menu__utility a:focus-visible { opacity: 1; }
+  .menu-overlay {
+    position: fixed; inset: 0; z-index: 9; background: rgba(0, 0, 0, .9);
+    opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility 0s linear .35s;
+  }
+  .menu-open .menu-overlay { opacity: 1; visibility: visible; transition-delay: 0s; }
+  @media (prefers-reduced-motion: reduce) {
+    .menu, .menu > *, .menu-overlay, .hamburger > span { transition: none; }
+  }
+
+  .cta {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 8px 16px; border-radius: 3px; flex-shrink: 0;
+    font: 400 15px/1.45 var(--font-ui); color: var(--visco-text-on-dark);
+    white-space: nowrap; text-decoration: none;
+  }
+  .cta--solid { background: #000; }
+  .icon-expand { position: relative; width: 20px; height: 20px; flex-shrink: 0; }
+  .icon-expand__art { position: absolute; inset: 11.46%; overflow: clip; }
+  .icon-expand__clip { position: absolute; inset: 0 1.05% 1.05% 0; }
+  .icon-expand__group {
+    position: absolute; inset: 0 1.02% 1.03% 0;
+    -webkit-mask: url("assets/expand-mask.svg") 0 0 / 15.254px 15.254px no-repeat;
+            mask: url("assets/expand-mask.svg") 0 0 / 15.254px 15.254px no-repeat;
+  }
+  .icon-expand__group img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; max-width: none; }
+
+
+  /* ---------- Approach hero (Figma 278:21884) ---------- */
+  .ap-hero {
+    background: var(--visco-surface-panel);
+    padding: 180px 24px 96px;
+    display: flex; flex-direction: column; gap: 48px;
+  }
+  .ap-hero__row { display: flex; gap: 32px; align-items: flex-start; }
+  .ap-hero__head, .ap-hero__intro { flex: 1 0 0; min-width: 0; }
+  .ap-hero__title {
+    margin: 0; max-width: 414.194px;
+    font: 500 60px/66px var(--font-display); color: #fff;
+  }
+  .ap-hero__intro { display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+  .ap-hero__lede { margin: 0; min-height: 64px; font: 400 18px/21.8px var(--font-ui); color: #fff; }
+  /* Button with arrow (Figma "button"), as .flow__cta on the home page, uppercase label */
+  .ap-cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+    padding: 12px 12px 12px 18px; border-radius: 2px;
+    background: var(--visco-surface-accent); color: var(--visco-text-on-dark);
+    font: 400 15px/22px var(--font-ui); letter-spacing: 0.64px; text-transform: uppercase;
+    text-decoration: none; white-space: nowrap;
+  }
+  .ap-cta > span { text-box: trim-both cap alphabetic; }
+  .ap-cta > img { display: block; flex-shrink: 0; }
+  /* Media: 1392 × 672 at 1440; the photo is zoomed and cropped as in Figma */
+  .ap-hero__media { position: relative; aspect-ratio: 1392 / 672; border-radius: 8px; overflow: clip; }
+  .ap-hero__media img {
+    position: absolute; left: -35.21%; top: -99.29%;
+    width: 170.43%; height: 198.58%; max-width: none; display: block;
+  }
+
+  /* ---------- Getting started timeline (Figma 364:4980) ----------
+     The section pins while the reader scrolls through it. Each step gets an
+     equal share of the scroll; the active step slides up into the slot 160px
+     down the window, lights up, and its image fades in on the left. */
+  .gs { --gs-h: 693px; position: relative; background: var(--visco-surface-panel); }
+  .gs.is-pinned { height: calc(var(--gs-h) + (var(--gs-steps) - 1) * 55vh); }
+  .gs__pin { position: sticky; top: max(0px, calc((100vh - var(--gs-h)) / 2)); }
+  .gs__inner { padding: 96px 48px; display: flex; flex-direction: column; gap: 32px; }
+  .gs__head { display: flex; flex-direction: column; align-items: center; color: #fff; text-align: center; }
+  .gs__eyebrow { margin: 0; min-height: 16px; font: 400 14px/15.6px var(--font-ui); letter-spacing: 0.4222px; text-transform: uppercase; }
+  .gs__title { margin: 0; font: 500 40px/72px var(--font-display); }
+
+  .gs__track { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 0 minmax(0, 1fr); column-gap: 24px; height: 381px; }
+  .gs__media { align-self: center; justify-self: end; position: relative; width: 167px; height: 161px; border-radius: 4px; overflow: clip; }
+  .gs__media img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+    opacity: 0; transition: opacity .6s ease;
+  }
+  .gs__media img.is-active { opacity: 1; }
+  .gs__line { position: relative; }
+  .gs__line img { position: absolute; left: 0.5px; top: 0; transform-origin: 0 0; transform: rotate(90deg); display: block; max-width: none; }
+  /* Panel-coloured fades over the top and bottom of the track (Figma Rectangles 26/27) */
+  .gs__fade { position: absolute; width: 709.736px; height: 62px; pointer-events: none; display: block; max-width: none; }
+  .gs__fade--top { top: 0; transform: scaleY(-1); }
+  .gs__fade--bottom { bottom: 0; }
+  .gs__track > .gs__fade { left: calc(50% - 354.868px); }
+  .gs__window > .gs__fade { left: -49.736px; }
+
+  .gs__window { position: relative; height: 381px; overflow: clip; padding-top: 160px; }
+  .gs__list {
+    margin: 0; padding: 0; list-style: none;
+    display: flex; flex-direction: column; gap: 50px;
+    transition: transform .7s cubic-bezier(.2, .8, .2, 1);
+    will-change: transform;
+  }
+  .gs-step {
+    position: relative; width: 500px; max-width: 100%;
+    display: grid; grid-template-columns: 72px minmax(0, 1fr); column-gap: 12px; padding-left: 12.726px;
+    opacity: .3; transition: opacity .5s ease;
+  }
+  .gs-step.is-active { opacity: 1; }
+  .gs-step__bar {
+    position: absolute; left: -11.459px; top: 9px; width: 3.082px; height: 34.142px;
+    background: #d9d9d9; transform: translateX(-50%);
+    transition: width .5s ease, background-color .5s ease;
+  }
+  .gs-step.is-active .gs-step__bar { width: 8.684px; background: var(--visco-surface-accent); }
+  .gs-step__num { font: 500 32px/48px var(--font-display); color: var(--visco-text-on-dark); opacity: .5; white-space: nowrap; }
+  .gs-step__body { display: flex; flex-direction: column; gap: 10px; color: #fff; }
+  .gs-step__title { margin: 0; font: 500 32px/48px var(--font-display); color: var(--visco-text-on-dark); }
+  .gs-step__text { margin: 0; font: 400 15px/19.765px var(--font-ui); }
+  .gs-step__thumb { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .gs__list, .gs-step, .gs-step__bar, .gs__media img { transition: none; }
+  }
+
+  /* ---------- People (Figma 278:1933) ---------- */
+  .ap-people { background: var(--visco-surface-panel); padding: 96px 24px; }
+  .ap-people__row { display: flex; gap: 32px; align-items: flex-start; }
+  .ap-people__head, .ap-people__col { flex: 1 0 0; min-width: 0; }
+  .ap-people__title { margin: 0; max-width: 599.427px; font: 500 60px/72px var(--font-display); color: #fff; }
+  .ap-people__col { display: flex; flex-direction: column; align-items: flex-start; }
+  .ap-people__body { max-width: 572.096px; padding: 18px 0 8px; font: 400 18px/21.8px var(--font-ui); color: #fff; }
+  .ap-people__body p { margin: 0; }
+  .ap-people__body p + p { margin-top: 21.8px; }   /* empty line between paragraphs in Figma */
+
+  @media (max-width: 900px) {
+    :root { --section-pad: 16px; --header-h: 70px; }
+    .nav__btn:not(.nav__burger) { display: none; }
+    .header { padding: 16px; }
+    .nav-wrap { position: static; }
+    .menu { --menu-x: 0; position: fixed; top: 62px; left: 16px; width: auto; right: 16px; }
+
+    .ap-hero { padding: 118px var(--section-pad) 48px; gap: 32px; }
+    .ap-hero__row { flex-direction: column; gap: 24px; }
+    .ap-hero__head, .ap-hero__intro { flex: none; width: 100%; }
+    .ap-hero__title { font-size: 40px; line-height: 44px; max-width: 300px; }
+    .ap-hero__lede { min-height: 0; font-size: 16px; line-height: 21.8px; }
+    /* Same bottom-half crop as desktop, in a taller frame */
+    .ap-hero__media { aspect-ratio: 4 / 3; }
+    .ap-hero__media img { top: -99.29%; left: 50%; width: auto; height: 198.58%; aspect-ratio: 16 / 9; transform: translateX(-50%); }
+
+    /* Getting started: no pinning, every step shown with its own image, line on the left */
+    .gs.is-pinned { height: auto; }
+    .gs__pin { position: static; }
+    .gs__inner { padding: 48px var(--section-pad); gap: 32px; }
+    .gs__head { align-items: flex-start; text-align: left; }
+    .gs__title { font-size: 32px; line-height: 40px; margin-top: 8px; }
+    .gs__track { display: block; height: auto; border-left: 1px solid #fff; }
+    .gs__media, .gs__line, .gs__fade { display: none; }
+    .gs__window { height: auto; overflow: visible; padding-top: 0; }
+    .gs__list { transform: none !important; gap: 40px; }
+    .gs-step { width: auto; opacity: 1; grid-template-columns: 44px minmax(0, 1fr); padding-left: 24px; }
+    .gs-step__bar { left: 12.5px; width: 8.684px; background: var(--visco-surface-accent); }
+    .gs-step__num, .gs-step__title { font-size: 24px; line-height: 30px; }
+    .gs-step__bar { top: 3px; height: 24px; }
+    .gs-step__thumb { display: block; width: 167px; height: 161px; object-fit: cover; border-radius: 4px; margin-bottom: 6px; }
+
+    .ap-people { padding: 48px var(--section-pad); }
+    .ap-people__row { flex-direction: column; gap: 24px; }
+    .ap-people__head, .ap-people__col { flex: none; width: 100%; }
+    .ap-people__title { font-size: 40px; line-height: 48px; }
+    .ap-people__body { padding-top: 0; font-size: 16px; }
+  }
+  @media (max-width: 560px) {
+    .header .cta--solid > span:first-child { display: none; }
+    .header .cta--solid { padding: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a class="logo" href="index.html" aria-label="Visco">
+    <img src="assets/logo.svg" alt="">
+    <span class="logo__symbol"><img src="assets/symbol.svg" alt=""></span>
+  </a>
+  <div class="nav-wrap">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav__btn" href="#">Platform</a>
+      <a class="nav__btn" href="#">Cases</a>
+      <a class="nav__btn" href="approach.html" aria-current="page">Approach</a>
+      <button class="nav__btn nav__burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-menu">
+        <span class="hamburger" aria-hidden="true"><span></span><span></span><span class="hamburger__close"><i></i><i></i><i></i><i></i></span></span>
+      </button>
+    </nav>
+    <div class="menu" id="site-menu" aria-label="Menu" inert>
+      <div class="menu__section" style="--i:0">
+        <p class="menu__label">Product</p>
+        <ul class="menu__links"><li><a href="#">Visco Stories</a></li><li><a href="#">Visco Interactive</a></li><li><a href="#">Visco Configure</a></li></ul>
+      </div>
+      <div class="menu__section" style="--i:1">
+        <p class="menu__label">Industries</p>
+        <ul class="menu__links"><li><a href="#">Energy: Oil &amp; gas</a></li><li><a href="#">Plants and refineries</a></li><li><a href="#">Renewables</a></li><li><a href="#">Subsea</a></li><li><a href="#">Infrastructure</a></li></ul>
+      </div>
+      <div class="menu__section" style="--i:2">
+        <p class="menu__label">Newsroom</p>
+        <ul class="menu__links"><li><a href="#">Insights</a></li><li><a href="#">News</a></li></ul>
+      </div>
+      <div class="menu__section" style="--i:3">
+        <p class="menu__label">Company</p>
+        <ul class="menu__links"><li><a href="#">About Visco</a></li><li><a href="#">Careers</a></li><li><a href="#">Contact</a></li></ul>
+      </div>
+      <div class="menu__divider" style="--i:4"></div>
+      <div class="menu__utility" style="--i:5">
+        <a href="#">Support</a>
+        <a href="#">Customer log in</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+  <a class="cta cta--solid" href="#">
+    <span>Talk to an expert</span>
+    <span class="icon-expand" aria-hidden="true">
+      <span class="icon-expand__art"><span class="icon-expand__clip"><span class="icon-expand__group"><img src="assets/expand.svg" alt=""></span></span></span>
+    </span>
+  </a>
+</header>
+<div class="menu-overlay" aria-hidden="true"></div>
+
+
+<main>
+  <section class="ap-hero" aria-labelledby="ap-hero-title">
+    <div class="ap-hero__row">
+      <div class="ap-hero__head">
+        <h1 class="ap-hero__title" id="ap-hero-title">Make every step workable</h1>
+      </div>
+      <div class="ap-hero__intro">
+        <p class="ap-hero__lede">We start with the real job and the people closest to it. Then we connect the right data, shape the workflow and build a solution that proves its value in practice.</p>
+        <a class="ap-cta" href="#getting-started"><span>See how it starts</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a>
+      </div>
+    </div>
+    <div class="ap-hero__media">
+      <img src="assets/approach/hero.webp" width="3840" height="2160" alt="Field worker in a high-visibility jacket holding a tablet">
+    </div>
+  </section>
+
+  <section class="gs" id="getting-started" aria-labelledby="gs-title" style="--gs-steps: 5">
+    <div class="gs__pin">
+      <div class="gs__inner">
+        <div class="gs__head">
+          <p class="gs__eyebrow">Getting started</p>
+          <h2 class="gs__title" id="gs-title">One path to execution</h2>
+        </div>
+        <div class="gs__track">
+          <!-- Images for steps 2–5 are stand-ins from the site until the real ones are supplied -->
+          <div class="gs__media">
+            <img class="is-active" src="assets/approach/step-1.webp" width="1512" height="900" alt="">
+            <img src="assets/workbench.webp" width="2000" height="1424" alt="" loading="lazy">
+            <img src="assets/approach/hero.webp" width="3840" height="2160" alt="" loading="lazy">
+            <img src="assets/benefits-controls.webp" width="2000" height="1316" alt="" loading="lazy">
+            <img src="assets/case-conocophillips.png" width="980" height="552" alt="" loading="lazy">
+          </div>
+          <div class="gs__line" aria-hidden="true"><img src="assets/approach/timeline-line.svg" width="381" height="1" alt=""></div>
+          <img class="gs__fade gs__fade--top" src="assets/approach/fade-top.png" width="710" height="62" alt="" aria-hidden="true">
+          <img class="gs__fade gs__fade--bottom" src="assets/approach/fade-bottom.png" width="710" height="62" alt="" aria-hidden="true">
+          <div class="gs__window">
+            <ol class="gs__list">
+              <li class="gs-step is-active">
+                <span class="gs-step__bar" aria-hidden="true"></span>
+                <span class="gs-step__num">01</span>
+                <div class="gs-step__body">
+                  <img class="gs-step__thumb" src="assets/approach/step-1.webp" width="1512" height="900" alt="" loading="lazy">
+                  <h3 class="gs-step__title">Start with one workflow</h3>
+                  <p class="gs-step__text">Choose the first real task, module and success measure with the people doing the work.</p>
+                </div>
+              </li>
+              <li class="gs-step">
+                <span class="gs-step__bar" aria-hidden="true"></span>
+                <span class="gs-step__num">02</span>
+                <div class="gs-step__body">
+                  <img class="gs-step__thumb" src="assets/workbench.webp" width="2000" height="1424" alt="" loading="lazy">
+                  <h3 class="gs-step__title">Connect the operational context</h3>
+                  <p class="gs-step__text">Bring models, drawings, documents, systems and live data together in one environment.</p>
+                </div>
+              </li>
+              <li class="gs-step">
+                <span class="gs-step__bar" aria-hidden="true"></span>
+                <span class="gs-step__num">03</span>
+                <div class="gs-step__body">
+                  <img class="gs-step__thumb" src="assets/approach/hero.webp" width="3840" height="2160" alt="" loading="lazy">
+                  <h3 class="gs-step__title">Put Workbench on the job</h3>
+                  <p class="gs-step__text">Go live on the real workflow, using the device and interface that fit the task.</p>
+                </div>
+              </li>
+              <li class="gs-step">
+                <span class="gs-step__bar" aria-hidden="true"></span>
+                <span class="gs-step__num">04</span>
+                <div class="gs-step__body">
+                  <img class="gs-step__thumb" src="assets/benefits-controls.webp" width="2000" height="1316" alt="" loading="lazy">
+                  <h3 class="gs-step__title">Prove the operational value</h3>
+                  <p class="gs-step__text">Measure the result against what you agreed at the start.</p>
+                </div>
+              </li>
+              <li class="gs-step">
+                <span class="gs-step__bar" aria-hidden="true"></span>
+                <span class="gs-step__num">05</span>
+                <div class="gs-step__body">
+                  <img class="gs-step__thumb" src="assets/case-conocophillips.png" width="980" height="552" alt="" loading="lazy">
+                  <h3 class="gs-step__title">Scale what works</h3>
+                  <p class="gs-step__text">Add new modules, workflows or assets while building on the same connected foundation.</p>
+                </div>
+              </li>
+            </ol>
+            <img class="gs__fade gs__fade--top" src="assets/approach/fade-top.png" width="710" height="62" alt="" aria-hidden="true">
+            <img class="gs__fade gs__fade--bottom" src="assets/approach/fade-bottom.png" width="710" height="62" alt="" aria-hidden="true">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ap-people" aria-labelledby="people-title">
+    <div class="ap-people__row">
+      <div class="ap-people__head">
+        <h2 class="ap-people__title" id="people-title">Start with the people who know the work.</h2>
+      </div>
+      <div class="ap-people__col">
+        <div class="ap-people__body">
+          <p>We work closely with the people who understand the workflow best, so we can choose the right place to start.</p>
+          <p>Bring the data you already have: models, drawings, tag lists and documents. Together, we connect what matters and get to a real working use case faster.</p>
+        </div>
+        <a class="ap-cta" href="#"><span>Contact</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  /* ---------------- Burger menu ----------------
+     The burger opens the menu panel under the nav: it drops in slightly,
+     its items settle one after another and the page dims behind a 90% black
+     overlay. The burger, the overlay, Esc or any link in the menu close it. */
+  const burger = document.querySelector('.nav__burger');
+  const menu = document.getElementById('site-menu');
+  if (burger && menu) {
+    const setMenu = open => {
+      document.documentElement.classList.toggle('menu-open', open);
+      burger.setAttribute('aria-expanded', open);
+      burger.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
+      menu.inert = !open;
+      document.body.style.overflow = open ? 'hidden' : '';
+    };
+    const isOpen = () => document.documentElement.classList.contains('menu-open');
+    burger.addEventListener('click', () => setMenu(!isOpen()));
+    document.querySelector('.menu-overlay').addEventListener('click', () => setMenu(false));
+    menu.addEventListener('click', e => { if (e.target.closest('a')) setMenu(false); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && isOpen()) { setMenu(false); burger.focus(); }
+    });
+  }
+
+  /* ---------------- Getting started timeline ----------------
+     Desktop only: the section pins and its scroll length is split evenly
+     between the steps. The active step slides into the slot at the top of
+     the window and its image fades in. On narrow screens CSS lays every
+     step out in full instead. */
+  const gs = document.querySelector('.gs');
+  if (gs) {
+    const list = gs.querySelector('.gs__list');
+    const steps = [...gs.querySelectorAll('.gs-step')];
+    const images = [...gs.querySelectorAll('.gs__media img')];
+    const pin = gs.querySelector('.gs__pin');
+    const desktop = matchMedia('(min-width: 901px)');
+    let current = -1;
+
+    const setStep = i => {
+      if (i === current) return;
+      current = i;
+      steps.forEach((s, n) => s.classList.toggle('is-active', n === i));
+      images.forEach((img, n) => img.classList.toggle('is-active', n === i));
+      list.style.transform = `translateY(${-(steps[i].offsetTop - steps[0].offsetTop)}px)`;
+    };
+    const update = () => {
+      if (!desktop.matches) return;
+      const pinTop = parseFloat(getComputedStyle(pin).top) || 0;
+      const travel = gs.offsetHeight - pin.offsetHeight;
+      const p = travel > 0 ? (pinTop - gs.getBoundingClientRect().top) / travel : 0;
+      setStep(Math.min(steps.length - 1, Math.max(0, Math.floor(p * steps.length))));
+    };
+    const layout = () => {
+      gs.classList.toggle('is-pinned', desktop.matches);
+      current = -1;
+      update();
+    };
+    let ticking = false;
+    addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { ticking = false; update(); });
+    }, { passive: true });
+    addEventListener('resize', layout);
+    desktop.addEventListener('change', layout);
+    layout();
+  }
+
+</script>
+</body>
+</html>
