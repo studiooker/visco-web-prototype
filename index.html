@@ -289,8 +289,41 @@
             mask: url("assets/icons/add-mask.svg") 0 0 / 32.306px 32.306px no-repeat;
   }
 
+  /* ---------- Stats (three number cards) ---------- */
+  .stats { background: var(--visco-surface-panel); padding: 48px 24px; }
+  .stats__row { display: flex; gap: 24px; align-items: center; margin: 0; padding: 0; list-style: none; }
+  .stat {
+    position: relative; flex: 1 0 0; min-width: 0; height: 480px; overflow: clip;
+    display: flex; flex-direction: column; gap: 30px; align-items: flex-start;
+    padding: 12px 24px 24px; border-radius: 4px; background: #000;
+  }
+  .stat--photo { padding-bottom: 12px; }
+  .stat__value {
+    margin: 0; font: 500 96px/1 var(--font-display); letter-spacing: -1.92px;
+    color: var(--visco-text-on-dark); white-space: nowrap;
+  }
+  .stat__value .tilde { letter-spacing: -0.96px; }
+  .stat__label {
+    margin: 0; max-width: 362.667px;
+    font: 400 15px/19px var(--font-ui); text-transform: uppercase; color: #fff; opacity: .5;
+  }
+  .stat:not(.stat--photo) .stat__label { flex: 1 0 0; min-height: 1px; }
+  .stat__photo { position: absolute; right: 0.33px; bottom: -0.85px; width: 453.77px; height: 223.791px; object-fit: cover; }
+  /* 40%: eight bars stepping up in strength, the last one solid and wider */
+  .stat-bars { position: relative; flex-shrink: 0; width: 349.547px; height: 106.201px; }
+  .stat-bars span { position: absolute; top: 0; height: 100%; width: 7.641px; background: #fff; }
+  /* 8+: two rows of small dashes, an arrow, then one solid bar */
+  .stat-merge { position: relative; flex-shrink: 0; width: 353.469px; height: 127.253px; }
+  .stat-merge span { position: absolute; background: #fff; }
+  .stat-merge .dash { width: 8.286px; height: 36.873px; opacity: .5; }
+  .stat-merge .bar { left: 335.2px; top: 20.14px; width: 18.269px; height: 107.113px; }
+  .stat-merge .arrow {
+    left: 179.05px; right: 83.42px; top: 0; background: none;
+    font: 500 114px/1 var(--font-display); letter-spacing: -2.28px; text-align: center; color: #fff;
+  }
+
   /* ---------- Flow (title + intro) ---------- */
-  .flow { background: var(--visco-surface-panel); padding: 96px 48px; }
+  .flow { background: var(--visco-surface-panel); padding: 96px 24px; }
   .flow__row { display: flex; gap: 32px; align-items: flex-start; }
   .flow__col { flex: 1 0 0; min-width: 0; }
   .flow__title {
@@ -348,9 +381,19 @@
     .workbench__text > *, .wb-card { max-width: none; }
   }
   @media (max-width: 900px) {
+    .stats { padding: 32px var(--section-pad); }
+    .stats__row { flex-direction: column; gap: 16px; align-items: stretch; }
+    .stat { flex: none; height: 400px; }
+    .stat__value { font-size: 72px; }
+    .stat__photo { width: 80%; height: auto; aspect-ratio: 453.77 / 223.791; }
+  }
+  @media (max-width: 900px) {
     .flow { padding: 48px var(--section-pad); }
     .flow__row { flex-direction: column; gap: 24px; }
     .flow__col { flex: none; width: 100%; }
+  }
+  @media (max-width: 460px) {
+    .stat-bars, .stat-merge { zoom: .8; }   /* 354px graphics fit a phone-width card */
   }
   @media (max-width: 560px) {
     .header .cta--solid > span:first-child { display: none; }
@@ -496,6 +539,25 @@
         </ul>
       </div>
     </div>
+  </section>
+  <section class="stats" aria-label="Visco in numbers">
+    <ul class="stats__row">
+      <li class="stat stat--photo">
+        <p class="stat__value"><span class="tilde">~</span>48ms</p>
+        <p class="stat__label">Average user interaction latency</p>
+        <img class="stat__photo" src="assets/stats-hardware.png" width="453.77" height="223.791" alt="">
+      </li>
+      <li class="stat">
+        <p class="stat__value">40%</p>
+        <p class="stat__label">Faster planning for complex work</p>
+        <span class="stat-bars" aria-hidden="true"><span style="left:0px;opacity:0.1"></span><span style="left:47.52px;opacity:0.2"></span><span style="left:95.04px;opacity:0.3"></span><span style="left:142.6px;opacity:0.4"></span><span style="left:190.1px;opacity:0.5"></span><span style="left:237.6px;opacity:0.6"></span><span style="left:285.1px;opacity:0.7"></span><span style="left:332.7px;width:16.847px"></span></span>
+      </li>
+      <li class="stat">
+        <p class="stat__value">8+</p>
+        <p class="stat__label">Systems and information sources brought into one operational environment</p>
+        <span class="stat-merge" aria-hidden="true"><span class="dash" style="left:0px;top:20.14px"></span><span class="dash" style="left:30.29px;top:20.14px"></span><span class="dash" style="left:60.57px;top:20.14px"></span><span class="dash" style="left:90.86px;top:20.14px"></span><span class="dash" style="left:0px;top:90.38px"></span><span class="dash" style="left:30.29px;top:90.38px"></span><span class="dash" style="left:60.27px;top:90.38px"></span><span class="dash" style="left:90.4px;top:90.38px"></span><span class="arrow">→</span><span class="bar"></span></span>
+      </li>
+    </ul>
   </section>
   <section class="flow" aria-labelledby="flow-title">
     <div class="flow__row">
