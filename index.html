@@ -336,14 +336,14 @@
   .flow__intro p + p { margin-top: 19px; }
   .flow__intro::after { content: ""; display: block; height: 38px; }  /* two empty lines in Figma */
   /* Button with arrow (Figma "button"): label trimmed to cap height, 12px gap, arrow icon */
-  .flow__cta, .case__cta {
+  .flow__cta, .case__cta, .closing__cta {
     display: inline-flex; align-items: center; justify-content: center; gap: 12px;
     padding: 12px 12px 12px 18px; border-radius: 2px; color: var(--visco-text-on-dark);
     font: 400 15px/22px var(--font-ui); letter-spacing: 0.64px;
     text-decoration: none; white-space: nowrap;
   }
-  .flow__cta > span, .case__cta > span { text-box: trim-both cap alphabetic; }
-  .flow__cta > img, .case__cta > img { display: block; flex-shrink: 0; }
+  .flow__cta > span, .case__cta > span, .closing__cta > span { text-box: trim-both cap alphabetic; }
+  .flow__cta > img, .case__cta > img, .closing__cta > img { display: block; flex-shrink: 0; }
   .flow__cta { background: var(--visco-surface-accent); }
   /* Dash build-in: the title shows through dashes that rise from below, then merge */
   .flow__title.is-building { color: transparent; }
@@ -423,6 +423,21 @@
     .product__desc, .product__shade { transition: none; }
   }
 
+  /* ---------- Closing CTA (blue card with dash field) ---------- */
+  .closing { background: var(--visco-surface-panel); padding: 48px 24px; }
+  .closing__card {
+    position: relative; overflow: clip; border-radius: 3px; background: var(--visco-surface-accent);
+    aspect-ratio: 1344 / 732; min-height: 520px;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 96px 48px 0 0;                          /* content sits 246px down at 1440, as in Figma */
+  }
+  .closing__field { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .closing__content { position: relative; display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center; color: #fff; }
+  .closing__title { margin: 0; max-width: 947px; font: 500 clamp(44px, 5.5556vw, 80px)/.9 var(--font-display); }
+  .closing__title::after { content: ""; display: block; height: .41em; }   /* 176.8px box for 144px of text in Figma */
+  .closing__copy { margin: 0; max-width: 498.43px; font: 400 16px/21.8px var(--font-ui); }
+  .closing__cta { background: var(--visco-surface-panel); }
+
   @media (max-width: 900px) {
     .nav__btn:not(.nav__burger) { display: none; }
     .title--hero { white-space: normal; width: calc(100% - 32px); }
@@ -486,6 +501,11 @@
     .products__row { flex-direction: column; gap: 16px; }
     .products__item { flex: none; width: 100%; }
     .product { flex: none; width: 100%; }
+  }
+  @media (max-width: 900px) {
+    .closing { padding: 16px var(--section-pad) 48px; }
+    .closing__card { aspect-ratio: auto; min-height: 560px; padding: 64px 20px; }
+    .closing__title::after { height: 0; }
   }
   @media (max-width: 560px) {
     .header .cta--solid > span:first-child { display: none; }
@@ -717,6 +737,16 @@
         <p class="product__desc">Turn complex product logic into visual experiences that improve accuracy, flexibility and speed.</p>
       </a></li>
     </ul>
+  </section>
+  <section class="closing" aria-labelledby="closing-title">
+    <div class="closing__card">
+      <canvas class="closing__field" aria-hidden="true"></canvas>
+      <div class="closing__content">
+        <h2 class="closing__title" id="closing-title">Make every step workable</h2>
+        <p class="closing__copy">Bring your asset, drawings, data and workflows into one connected environment, so your teams can find what they need, understand the full picture and move the work forward.</p>
+        <a class="closing__cta" href="#"><span>Talk to an expert</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -1188,6 +1218,167 @@
       preload.disconnect();
     }, { rootMargin: '100% 0px' });
     preload.observe(products);
+  }
+
+  /* ---------------- Closing CTA dash field ----------------
+     Port of the Visco dash-field graphic (visco-dash-field.pages.dev) with the
+     settings below, in white on the card's blue. At rest it is a white blob of
+     peak dashes at the top centre of the card, where the Figma graphic sits.
+     As the card scrolls in, every column slides up at its own speed, carrying
+     its part of the blob, and the dashes get thinner and thinner until they
+     are gone. The blob keeps its shape and the white never fades. */
+  const FIELD = {
+    cols: 81, rows: 39, brick: .59, cellJitter: 0,
+    restLength: .49, peakLength: .55, restWeight: .075, peakWeight: .275, capRound: 0, lift: .13,
+    fieldScale: 3.4, fieldAngle: -35, fieldSpeed: .25, fieldBreakup: .5,
+    twinkle: .25, twinkleRate: .8, restLevel: .42, peakLevel: 1, seed: 999,
+  };
+  // Blob at rest: centre as a share of the card, radius as a share of its height
+  const BLOB = { x: .507, y: .3, radius: .33 };
+  const RISE = .35;                                // how far columns travel up, as a share of the card's height
+
+  const closing = document.querySelector('.closing');
+  const fieldCanvas = closing && closing.querySelector('.closing__field');
+  const gl2 = fieldCanvas && fieldCanvas.getContext('webgl2', { premultipliedAlpha: true, antialias: false });
+  if (gl2) {
+    const VERT = `#version 300 es
+      in vec2 aPosition; out vec2 vUv;
+      void main() { vUv = aPosition * 0.5 + 0.5; gl_Position = vec4(aPosition, 0.0, 1.0); }`;
+    const FRAG = `#version 300 es
+      precision highp float;
+      in vec2 vUv; out vec4 fragColor;
+      uniform vec2 uResolution; uniform float uTime; uniform float uSeed;
+      uniform float uCols, uRows, uBrick, uCellJitter;
+      uniform float uRestLength, uPeakLength, uRestWeight, uPeakWeight, uCapRound, uLift;
+      uniform float uFieldScale, uFieldAngle, uFieldSpeed, uFieldBreakup;
+      uniform float uTwinkle, uTwinkleRate, uRestLevel, uPeakLevel;
+      uniform vec3 uBlob;           // centre x, y (0..1, y up) and radius (share of height)
+      uniform float uDisperse;      // 0 = blob at rest, 1 = fully dispersed
+      uniform float uRise;          // furthest a column travels up, in cells
+
+      uint uhash(uvec2 p) {
+        uint h = p.x * 374761393u + p.y * 668265263u + uint(uSeed) * 2246822519u;
+        h = (h ^ (h >> 13)) * 1274126177u;
+        return h ^ (h >> 16);
+      }
+      float hash21(vec2 p) { uvec2 q = uvec2(ivec2(floor(p)) + 8192); return float(uhash(q) & 0xFFFFFFu) / 16777215.0; }
+      float vnoise(vec2 p) {
+        vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash21(i), hash21(i + vec2(1, 0)), f.x), mix(hash21(i + vec2(0, 1)), hash21(i + vec2(1, 1)), f.x), f.y);
+      }
+      float fbm(vec2 p) { float s = 0.0, a = 0.5; for (int k = 0; k < 4; k++) { s += a * vnoise(p); p *= 2.03; a *= 0.5; } return s; }
+      float roundedBox(vec2 p, vec2 hs, float r) {
+        r = min(r, min(hs.x, hs.y)); vec2 d = abs(p) - (hs - r);
+        return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - r;
+      }
+
+      void main() {
+        vec2 grid = vec2(uCols, uRows);
+        vec2 cellPx = uResolution / grid;
+        float aspect = uResolution.x / max(uResolution.y, 1.0);
+        vec2 cell = vUv * grid;
+        float col = floor(cell.x);
+        float odd = mod(col, 2.0);
+        // Each column slides up at its own speed as the blob disperses
+        float shift = uDisperse * uRise * (0.5 + hash21(vec2(col, 7.0)));
+        cell.y += odd * uBrick - shift;
+        vec2 id = floor(cell);
+        vec2 f = fract(cell) - 0.5;
+        float ang = radians(uFieldAngle);
+        vec2 fdir = vec2(cos(ang), sin(ang));
+        float ink = 0.0;
+        for (int dy = -1; dy <= 1; dy++) {
+          vec2 nid = id + vec2(0.0, float(dy));
+          vec2 home = (nid + 0.5 - vec2(0.0, odd * uBrick)) / grid;
+          vec2 q = vec2((home.x - uBlob.x) * aspect, home.y - uBlob.y);
+          // Uneven edge from the pattern's own noise, drifting slowly
+          float edge = 1.0 + (fbm(home * vec2(aspect, 1.0) * uFieldScale - fdir * uTime * uFieldSpeed) - 0.5) * 0.9;
+          float d = length(q) / uBlob.z / edge;
+          float halo = 1.0 - smoothstep(1.0, 1.6, d);          // faint dashes just outside the blob
+          if (halo <= 0.0) continue;
+          float h = hash21(nid + 11.0);
+          float a = clamp((1.0 - d) * 3.0, 0.0, 1.0);
+          a = clamp(a * mix(1.0, 0.35 + 1.3 * h, uFieldBreakup), 0.0, 1.0);
+          // Each dash thins at its own moment; by uDisperse = 1 all are gone
+          float g = hash21(nid + 53.0);
+          float thin = 1.0 - smoothstep(g * 0.55, g * 0.55 + 0.45, uDisperse);
+          if (thin <= 0.0) continue;
+          float halfLen = 0.5 * mix(uRestLength, uPeakLength, a);
+          float halfW = 0.5 * mix(uRestWeight, uPeakWeight, a) * thin;
+          vec2 off = vec2((hash21(nid + 37.0) - 0.5) * uCellJitter,
+                          (hash21(nid + 71.0) - 0.5) * (uCellJitter + uLift * a));
+          vec2 local = (f - vec2(0.0, float(dy)) - off) * cellPx;
+          float wPx = halfW * cellPx.x;
+          float sd = roundedBox(local, vec2(max(wPx, 0.5), halfLen * cellPx.y), uCapRound * wPx);
+          // Below a pixel wide the dash covers only part of the pixel
+          float cov = (1.0 - smoothstep(-0.5, 0.5, sd)) * clamp(wPx * 2.0, 0.0, 1.0);
+          float tw = 0.5 + 0.5 * sin(6.2831853 * (uTime * uTwinkleRate + hash21(nid + 91.0)));
+          float level = mix(uRestLevel, uPeakLevel, a) * mix(1.0, tw, uTwinkle) * halo;
+          ink = max(ink, cov * level);
+        }
+        fragColor = vec4(vec3(ink), ink);           // white, premultiplied, over the card's blue
+      }`;
+    const sh = (type, code) => { const s = gl2.createShader(type); gl2.shaderSource(s, code); gl2.compileShader(s);
+      if (!gl2.getShaderParameter(s, gl2.COMPILE_STATUS)) throw new Error(gl2.getShaderInfoLog(s)); return s; };
+    try {
+      const prog = gl2.createProgram();
+      gl2.attachShader(prog, sh(gl2.VERTEX_SHADER, VERT));
+      gl2.attachShader(prog, sh(gl2.FRAGMENT_SHADER, FRAG));
+      gl2.bindAttribLocation(prog, 0, 'aPosition');
+      gl2.linkProgram(prog);
+      if (!gl2.getProgramParameter(prog, gl2.LINK_STATUS)) throw new Error(gl2.getProgramInfoLog(prog));
+      gl2.useProgram(prog);
+      gl2.bindBuffer(gl2.ARRAY_BUFFER, gl2.createBuffer());
+      gl2.bufferData(gl2.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl2.STATIC_DRAW);
+      gl2.enableVertexAttribArray(0);
+      gl2.vertexAttribPointer(0, 2, gl2.FLOAT, false, 0, 0);
+      const U = n => gl2.getUniformLocation(prog, n);
+      const set = { brick: 'uBrick', cellJitter: 'uCellJitter', restLength: 'uRestLength',
+        peakLength: 'uPeakLength', restWeight: 'uRestWeight', peakWeight: 'uPeakWeight', capRound: 'uCapRound', lift: 'uLift',
+        fieldScale: 'uFieldScale', fieldAngle: 'uFieldAngle', fieldSpeed: 'uFieldSpeed', fieldBreakup: 'uFieldBreakup',
+        twinkle: 'uTwinkle', twinkleRate: 'uTwinkleRate', restLevel: 'uRestLevel', peakLevel: 'uPeakLevel', seed: 'uSeed' };
+      Object.entries(set).forEach(([k, u]) => gl2.uniform1f(U(u), FIELD[k]));
+      gl2.uniform3f(U('uBlob'), BLOB.x, 1 - BLOB.y, BLOB.radius);
+      const uRes = U('uResolution'), uTime = U('uTime'), uDisperse = U('uDisperse'), uCols = U('uCols'), uRows = U('uRows'), uRise = U('uRise');
+      const card = closing.querySelector('.closing__card');
+
+      // The blob holds while the card enters, starts dispersing once the
+      // card's top passes DISPERSE_START of the viewport, and is gone by the
+      // time the card's top reaches the header.
+      const DISPERSE_START = .6;
+      const disperse = () => {
+        const r = card.getBoundingClientRect(), vh = window.innerHeight;
+        const from = vh * DISPERSE_START, to = 86;
+        return autoplay ? clamp((from - r.top) / Math.max(1, from - to)) : 0;
+      };
+
+      let running = false, t0 = performance.now(), raf = 0;
+      const frame = now => {
+        raf = 0;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = Math.round(fieldCanvas.clientWidth * dpr), h = Math.round(fieldCanvas.clientHeight * dpr);
+        if (fieldCanvas.width !== w || fieldCanvas.height !== h) { fieldCanvas.width = w; fieldCanvas.height = h; }
+        gl2.viewport(0, 0, w, h);
+        gl2.uniform2f(uRes, w, h);
+        // Keep the 1440 cell size (81 x 39 over the 1344 x 732 card) on any card size
+        const rows = Math.max(8, Math.round(FIELD.rows * fieldCanvas.clientHeight / 732));
+        gl2.uniform1f(uCols, Math.max(12, Math.round(FIELD.cols * fieldCanvas.clientWidth / 1344)));
+        gl2.uniform1f(uRows, rows);
+        gl2.uniform1f(uRise, RISE * rows);
+        gl2.uniform1f(uTime, autoplay ? (now - t0) / 1000 : 0);
+        gl2.uniform1f(uDisperse, disperse());
+        gl2.clearColor(0, 0, 0, 0);
+        gl2.clear(gl2.COLOR_BUFFER_BIT);
+        gl2.drawArrays(gl2.TRIANGLE_STRIP, 0, 4);
+        if (running && autoplay) raf = requestAnimationFrame(frame);
+      };
+      new IntersectionObserver(([entry]) => {
+        running = entry.isIntersecting;
+        if (running && !raf) raf = requestAnimationFrame(frame);
+      }).observe(card);
+      window.addEventListener('resize', () => { if (!raf) raf = requestAnimationFrame(frame); });
+      requestAnimationFrame(frame);
+    } catch (e) { console.warn('Closing dash field disabled:', e); }
   }
 
   /* ---------------- Dash build-in for titles ----------------
