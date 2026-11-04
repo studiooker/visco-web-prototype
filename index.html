@@ -460,10 +460,15 @@
   .industry > img { display: block; flex-shrink: 0; opacity: 0; transition: opacity .3s ease; }
   .industry.is-active, .industry.is-active > img { opacity: 1; }
   .industry:focus-visible { outline: 2px solid #fff; outline-offset: 6px; }
-  .industries__media { grid-column: 9 / span 4; aspect-ratio: 16 / 9; border-radius: 4px; overflow: clip; }
-  .industries__media img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 68.6%; }
+  /* One photo per industry, stacked; the active one fades in */
+  .industries__media { position: relative; grid-column: 9 / span 4; aspect-ratio: 16 / 9; border-radius: 4px; overflow: clip; background: #000; }
+  .industries__media img {
+    position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover;
+    opacity: 0; transition: opacity .4s ease;
+  }
+  .industries__media img.is-active { opacity: 1; }
   @media (prefers-reduced-motion: reduce) {
-    .industry, .industry > img { transition: none; }
+    .industry, .industry > img, .industries__media img { transition: none; }
   }
 
   /* ---------- Products (three video cards) ---------- */
@@ -853,14 +858,18 @@
     <div class="industries__row">
       <h2 class="industries__eyebrow" id="industries-title">Where we operate</h2>
       <ul class="industries__list">
-        <li><a class="industry is-active" href="#"><span>Energy: Oil &amp; gas</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a></li>
-        <li><a class="industry" href="#"><span>Renewables</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a></li>
-        <li><a class="industry" href="#"><span>Infrastructure</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a></li>
-        <li><a class="industry" href="#"><span>Plants &amp; Refineries</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a></li>
-        <li><a class="industry" href="#"><span>Subsea</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a></li>
+        <li><a class="industry is-active" href="#" data-industry="oil-gas"><span>Oil &amp; gas</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a></li>
+        <li><a class="industry" href="#" data-industry="renewables"><span>Renewables</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a></li>
+        <li><a class="industry" href="#" data-industry="infrastructure"><span>Infrastructure</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a></li>
+        <li><a class="industry" href="#" data-industry="plants-refineries"><span>Plants &amp; Refineries</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a></li>
+        <li><a class="industry" href="#" data-industry="subsea"><span>Subsea</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a></li>
       </ul>
       <div class="industries__media">
-        <img src="assets/industries/oil-gas.webp" width="1600" height="1600" alt="A person in glasses, seen from behind, looking toward a blurred group of people in a meeting room." loading="lazy">
+        <img class="is-active" data-industry="oil-gas" src="assets/industries/oil-gas.webp" width="1792" height="1008" loading="lazy" alt="A green offshore supply vessel alongside the legs of an oil platform at sea.">
+        <img data-industry="renewables" src="assets/industries/renewables.webp" width="1792" height="1008" loading="lazy" alt="Rows of solar panels seen at an angle, in dark blue tones.">
+        <img data-industry="infrastructure" src="assets/industries/infrastructure.webp" width="1792" height="1008" loading="lazy" alt="Aerial view of elevated rail tracks curving through a snowy city district.">
+        <img data-industry="plants-refineries" src="assets/industries/plants-refineries.webp" width="1792" height="1008" loading="lazy" alt="A refinery with tall columns and stacks on a riverbank.">
+        <img data-industry="subsea" src="assets/industries/subsea.webp" width="1792" height="1008" loading="lazy" alt="A subsea construction vessel with a large crane in rough grey seas.">
       </div>
     </div>
   </section>
@@ -1509,10 +1518,15 @@
   }
 })();
 
-/* ---------- Industries: the hovered or focused item becomes active and stays so ---------- */
+/* ---------- Industries: the hovered or focused item becomes active and stays so,
+   and its photo fades in ---------- */
 (() => {
   const items = [...document.querySelectorAll('.industry')];
-  const activate = el => items.forEach(i => i.classList.toggle('is-active', i === el));
+  const photos = [...document.querySelectorAll('.industries__media img')];
+  const activate = el => {
+    items.forEach(i => i.classList.toggle('is-active', i === el));
+    photos.forEach(p => p.classList.toggle('is-active', p.dataset.industry === el.dataset.industry));
+  };
   items.forEach(el => {
     el.addEventListener('pointerenter', () => activate(el));
     el.addEventListener('focus', () => activate(el));
