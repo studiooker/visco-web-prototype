@@ -54,7 +54,7 @@
   body { -webkit-font-smoothing: antialiased; }
 
   /* ---------- Scroll track ---------- */
-  .scroller { position: relative; height: 500vh; background: var(--visco-surface-panel); } /* 1 screen + 2 segments × 200vh (scrub); snap shortens it to 300vh */
+  .scroller { position: relative; height: 500vh; background: var(--visco-surface-panel); } /* 1 screen + 2 segments × 200vh */
   .stage {
     position: sticky; top: 0;
     height: 100vh; max-height: 1280px;
@@ -842,14 +842,10 @@
   // Each scroll segment: rest | transition | rest. Everything animates inside [START, END].
   // Wipe, blobs and field are quicker: 40vh instead of 80vh, with the titles moving in the same window.
   const QUICK = SHAPE === SHAPES.wipe || SHAPE === SHAPES.blobs || SHAPE === SHAPES.field;
-  // Scroll behaviour: snap (default) plays each transition as a timed animation once the
-  // scroll crosses a threshold; ?scroll=scrub ties the transitions to the scroll position.
-  const SNAP = params.get('scroll') !== 'scrub';
-  const [TRANSITION_START, TRANSITION_END] = SNAP ? [0, 1] : QUICK ? [.4, .6] : [.3, .7];
+  // Transitions are tied to the scroll position (no snapping).
+  const [TRANSITION_START, TRANSITION_END] = QUICK ? [.4, .6] : [.3, .7];
 
   const scroller = document.getElementById('hero');
-  // Snapping only needs a short track: one screen per view, pinned until the last one
-  if (SNAP) scroller.style.height = `${(1 + TRANSITIONS) * 100}vh`;
   const films = [...document.querySelectorAll('.film')];
   const titles = [...document.querySelectorAll('[data-title]')];
   const thumb = document.querySelector('.progress__thumb');
@@ -1158,66 +1154,7 @@
   const scrollYFor = view =>
     scroller.offsetTop + (scroller.offsetHeight - window.innerHeight) * view / TRANSITIONS;
 
-  if (SNAP) setupSnap(); else setupScrub();
-
-  /* Snap: nothing moves while the scroll stays near a view. Crossing SNAP_THRESHOLD
-     plays the transition over SNAP_MS while the page glides to the next view; input
-     is held off until it lands, including leftover trackpad momentum. Past the last
-     view the page scrolls normally. */
-  function setupSnap() {
-    const SNAP_MS = 1200;
-    const SNAP_THRESHOLD = .08;           // share of a screen of scroll that triggers a snap
-    const MOMENTUM_QUIET_MS = 200;        // wheel must pause this long before it scrolls again
-    let view = Math.round(progress()), shown = view, anim = 0;
-    let lastWheel = 0, holdWheel = false, quietTimer = 0;
-
-    function goTo(target, moveScroll = true) {
-      target = clamp(Math.round(target), 0, TRANSITIONS);
-      cancelAnimationFrame(anim);
-      const fromP = shown, fromY = window.scrollY, toY = scrollYFor(target), t0 = performance.now();
-      view = target;
-      const step = now => {
-        const e = easeInOut(clamp((now - t0) / SNAP_MS));
-        shown = fromP + (target - fromP) * e;
-        render(shown);
-        if (moveScroll) window.scrollTo(0, fromY + (toY - fromY) * e);
-        if (e < 1) { anim = requestAnimationFrame(step); return; }
-        anim = 0;
-        // Swallow the tail of a trackpad flick so it doesn't trigger the next snap
-        if (performance.now() - lastWheel < 100) releaseWheelWhenQuiet();
-      };
-      anim = requestAnimationFrame(step);
-    }
-
-    function releaseWheelWhenQuiet() {
-      holdWheel = true;
-      clearTimeout(quietTimer);
-      quietTimer = setTimeout(() => { holdWheel = false; }, MOMENTUM_QUIET_MS);
-    }
-
-    window.addEventListener('scroll', () => {
-      if (anim) return;
-      const d = progress() - view;
-      if (Math.abs(d) >= 1) goTo(progress(), false);   // big jump (keys, scrollbar): follow without snapping
-      else if (d > SNAP_THRESHOLD && view < TRANSITIONS) goTo(view + 1);
-      else if (d < -SNAP_THRESHOLD && view > 0) goTo(view - 1);
-    }, { passive: true });
-
-    window.addEventListener('wheel', e => {
-      lastWheel = performance.now();
-      if (anim || holdWheel) { e.preventDefault(); if (holdWheel) releaseWheelWhenQuiet(); }
-    }, { passive: false });
-    window.addEventListener('touchmove', e => { if (anim) e.preventDefault(); }, { passive: false });
-    window.addEventListener('keydown', e => {
-      if (anim && ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'].includes(e.key)) e.preventDefault();
-    });
-    window.addEventListener('resize', () => { if (!anim) render(shown); });
-    render(shown);
-
-    document.querySelectorAll('[data-goto]').forEach(btn => {
-      btn.addEventListener('click', () => goTo(+btn.dataset.goto));
-    });
-  }
+  setupScrub();
 
   /* Scrub: the effects follow the scroll position, easing towards it instead of
      jumping with each wheel step, so short transitions still play smoothly. */
@@ -1399,9 +1336,9 @@
      are gone. The blob keeps its shape and the white never fades. */
   const FIELD = {
     cols: 81, rows: 39, brick: .59, cellJitter: 0,
-    restLength: .49, peakLength: .55, restWeight: .075, peakWeight: .275, capRound: 0, lift: .13,
-    fieldScale: 3.4, fieldAngle: -35, fieldSpeed: .25, fieldBreakup: .5,
-    twinkle: .25, twinkleRate: .8, restLevel: .42, peakLevel: 1, seed: 999,
+    restLength: .52, peakLength: .58, restWeight: .1, peakWeight: .3, capRound: 0, lift: .13,
+    fieldScale: 3.4, fieldAngle: -35, fieldSpeed: .25, fieldBreakup: .3,
+    twinkle: .2, twinkleRate: .8, restLevel: .55, peakLevel: 1, seed: 999,
   };
   // Blob at rest: centre as a share of the card, radius as a share of its height
   const BLOB = { x: .507, y: .3, radius: .33 };
@@ -1464,10 +1401,10 @@
           // Uneven edge from the pattern's own noise, drifting slowly
           float edge = 1.0 + (fbm(home * vec2(aspect, 1.0) * uFieldScale - fdir * uTime * uFieldSpeed) - 0.5) * 0.9;
           float d = length(q) / uBlob.z / edge;
-          float halo = 1.0 - smoothstep(1.0, 1.6, d);          // faint dashes just outside the blob
+          float halo = 1.0 - smoothstep(1.0, 1.75, d);         // faint dashes just outside the blob
           if (halo <= 0.0) continue;
           float h = hash21(nid + 11.0);
-          float a = clamp((1.0 - d) * 3.0, 0.0, 1.0);
+          float a = clamp((1.0 - d) * 4.5, 0.0, 1.0);
           a = clamp(a * mix(1.0, 0.35 + 1.3 * h, uFieldBreakup), 0.0, 1.0);
           // Each dash thins at its own moment; by uDisperse = 1 all are gone
           float g = hash21(nid + 53.0);
@@ -1513,12 +1450,12 @@
       const card = closing.querySelector('.closing__card');
 
       // The blob holds while the card enters, starts dispersing once the
-      // card's top passes DISPERSE_START of the viewport, and is gone by the
-      // time the card's top reaches the header.
-      const DISPERSE_START = .6;
+      // card's top passes DISPERSE_START of the viewport, and is gone once
+      // the card's top reaches DISPERSE_END of the viewport.
+      const DISPERSE_START = .7, DISPERSE_END = .3;
       const disperse = () => {
         const r = card.getBoundingClientRect(), vh = window.innerHeight;
-        const from = vh * DISPERSE_START, to = 86;
+        const from = vh * DISPERSE_START, to = vh * DISPERSE_END;
         return autoplay ? clamp((from - r.top) / Math.max(1, from - to)) : 0;
       };
 
