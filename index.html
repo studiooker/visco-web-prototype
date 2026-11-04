@@ -54,7 +54,7 @@
   body { -webkit-font-smoothing: antialiased; }
 
   /* ---------- Scroll track ---------- */
-  .scroller { position: relative; height: 500vh; background: var(--visco-surface-panel); } /* 1 screen + 2 segments × 200vh */
+  .scroller { position: relative; height: 500vh; background: var(--visco-surface-panel); } /* 1 screen + 2 segments × 200vh (scrub); snap shortens it to 300vh */
   .stage {
     position: sticky; top: 0;
     height: 100vh; max-height: 1280px;
@@ -846,15 +846,20 @@
   const BAR_STEP = 24.345;              // distance between progress bars
   const TRANSITIONS = 2;
   const params = new URLSearchParams(location.search);
-  // Wave shape of the dash transition: blobs (default), ?shape=diamond, ?shape=v or ?shape=wipe
-  const SHAPES = { diamond: 0, v: 1, wipe: 2, blobs: 3 };
-  const SHAPE = SHAPES[params.get('shape')] ?? SHAPES.blobs;
+  // Wave shape of the dash transition: field (default), ?shape=blobs, ?shape=diamond, ?shape=v or ?shape=wipe
+  const SHAPES = { diamond: 0, v: 1, wipe: 2, blobs: 3, field: 4 };
+  const SHAPE = SHAPES[params.get('shape')] ?? SHAPES.field;
   // Each scroll segment: rest | transition | rest. Everything animates inside [START, END].
-  // Wipe and blobs are quicker: 40vh instead of 80vh, with the titles moving in the same window.
-  const QUICK = SHAPE === SHAPES.wipe || SHAPE === SHAPES.blobs;
-  const [TRANSITION_START, TRANSITION_END] = QUICK ? [.4, .6] : [.3, .7];
+  // Wipe, blobs and field are quicker: 40vh instead of 80vh, with the titles moving in the same window.
+  const QUICK = SHAPE === SHAPES.wipe || SHAPE === SHAPES.blobs || SHAPE === SHAPES.field;
+  // Scroll behaviour: snap (default) plays each transition as a timed animation once the
+  // scroll crosses a threshold; ?scroll=scrub ties the transitions to the scroll position.
+  const SNAP = params.get('scroll') !== 'scrub';
+  const [TRANSITION_START, TRANSITION_END] = SNAP ? [0, 1] : QUICK ? [.4, .6] : [.3, .7];
 
   const scroller = document.getElementById('hero');
+  // Snapping only needs a short track: one screen per view, pinned until the last one
+  if (SNAP) scroller.style.height = `${(1 + TRANSITIONS) * 100}vh`;
   const films = [...document.querySelectorAll('.film')];
   const titles = [...document.querySelectorAll('[data-title]')];
   const thumb = document.querySelector('.progress__thumb');
@@ -876,10 +881,12 @@
   const easeOut = t => 1 - Math.pow(1 - t, 3);
 
   /* ---------------- Bar-grid transition ----------------
-     Inspired by the "5th element" motion: vertical dashes appear in random
-     blobs. Each dash masks in the incoming film, then the dashes widen and
+     Inspired by the "5th element" motion and the dash-field graphic: short
+     vertical dashes, about as long as the gaps between them, appear in random
+     blobs. Each dash masks in the incoming film, then the dashes swell and
      merge into the full frame.
-     ?shape=diamond grows a diamond from the centre instead,
+     ?shape=blobs uses the longer, taller dashes instead,
+     ?shape=diamond grows a diamond from the centre,
      ?shape=v a V-shaped edge rising from the bottom,
      ?shape=wipe a straight edge sweeping from bottom to top.
      ?transition=line falls back to the Figma line reveal. */
@@ -902,7 +909,7 @@
       uniform vec2  uCell;      // grid cell px
       uniform vec2  uCoverFrom, uCoverTo;  // object-fit: cover scale per film
       uniform float uProg;      // 0 … 1
-      uniform float uShape;     // 0 = diamond from the centre, 1 = V edge rising from the bottom, 2 = straight wipe up, 3 = random blobs
+      uniform float uShape;     // 0 = diamond from the centre, 1 = V edge rising from the bottom, 2 = straight wipe up, 3 = random blobs, 4 = dash field
       uniform float uSeed;      // varies the blob pattern per transition
 
       const float DIM  = 0.675;                      // matches .dim overlay
@@ -914,6 +921,11 @@
       const float BLOB_COUNT = 4.0;                  // blobs: roughly how many across the frame
       const float BLOB_TALL = 1.6;                   // blobs: height ÷ width
       const float BLOB_BAND = 0.3;                   // blobs: wider band, so dashes build up and merge gradually
+      // Dash field (from the visco-dash-field reference): sizes are fractions of the cell
+      const float FIELD_REST_LEN = 0.49, FIELD_PEAK_LEN = 0.55;  // dash length ≈ gap
+      const float FIELD_REST_W = 0.075, FIELD_PEAK_W = 0.275;
+      const float FIELD_BRICK = 0.59;                // every other column shifted 0.59 of a cell
+      const float FIELD_LIFT = 0.13;                 // random vertical nudge at peak
 
       float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 
@@ -938,7 +950,8 @@
         vec2 frag = gl_FragCoord.xy;
         vec2 uv   = frag / uRes;
         vec2 rel  = frag - uRes * 0.5;                      // grid anchored on the centre
-        vec2 shift = vec2(0.0, mod(floor(rel.x / uCell.x), 2.0) * 0.5 * uCell.y); // every other column offset by half a cell
+        float brick = uShape > 3.5 ? FIELD_BRICK : 0.5;
+        vec2 shift = vec2(0.0, mod(floor(rel.x / uCell.x), 2.0) * brick * uCell.y); // every other column offset (brick)
         vec2 id   = floor((rel + shift) / uCell);
         vec2 cuv  = (rel + shift) / uCell - id - 0.5;       // -0.5 … 0.5 inside the cell
         vec2 cc   = ((id + 0.5) * uCell - shift + uRes * 0.5) / uRes;
@@ -978,7 +991,17 @@
         // starting as hairlines at the leading edge and filling the cell behind the wave
         float w = mix(mix(0.14, 0.42, thick), 1.02, widen);
         float h = mix(0.9, 1.02, widen);
-        float dash = box(cuv * uCell, vec2(w, h) * uCell * 0.5, vec2(0.75));
+        vec2  lift = vec2(0.0);
+        if (uShape > 3.5) {
+          // Dash field (visco-dash-field.pages.dev): dashes about half the cell tall, so dash and
+          // gap are close to equal; they swell from rest to peak, lift slightly, then merge
+          float act = smoothstep(0.08, 0.45, L);
+          float merge = smoothstep(0.5, 1.0, L);
+          w = mix(mix(FIELD_REST_W, FIELD_PEAK_W, act), 1.02, merge);
+          h = mix(mix(FIELD_REST_LEN, FIELD_PEAK_LEN, act), 1.02, merge);
+          lift.y = (hash(id + 71.0) - 0.5) * FIELD_LIFT * act * (1.0 - merge);
+        }
+        float dash = box((cuv - lift) * uCell, vec2(w, h) * uCell * 0.5, vec2(0.75));
 
         // The dashes are windows onto the incoming film, the outgoing film stays around them
         vec3 col = mix(a, b, dash * on);
@@ -1026,15 +1049,20 @@
     gl.uniform1i(U.to, 1);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-    // Cell proportions from the reference (2.65× taller than wide), at about twice its scale
-    const CELL_W = .018, CELL_RATIO = 2.65, CELL_MIN = 14;
+    // Cell proportions from the reference (2.65× taller than wide), at about 1.5× its scale.
+    // Cells scale with the frame on smaller screens and stop growing at their 1440px-wide
+    // size (20px), so laptops and large desktops get the same dash size.
+    const CELL_W = .014, CELL_MIN = 11, CELL_MAX = 20;
+    // The dash field uses the reference's grid (81 × 39 over a 16:9 frame), whose cells are
+    // only ~1.2× taller than wide, so its half-cell dashes come out short with equal gaps
+    const CELL_RATIO = shape === SHAPES.field ? 1.2 : 2.65;
     const dpr = () => Math.min(window.devicePixelRatio || 1, 1.5);
 
     function resize() {
       const w = Math.round(canvas.clientWidth * dpr()), h = Math.round(canvas.clientHeight * dpr());
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
       gl.viewport(0, 0, w, h);
-      const cw = Math.max(CELL_MIN, canvas.clientWidth * CELL_W) * dpr();
+      const cw = clamp(canvas.clientWidth * CELL_W, CELL_MIN, CELL_MAX) * dpr();
       gl.uniform2f(U.res, w, h);
       gl.uniform2f(U.cell, cw, cw * CELL_RATIO);
     }
@@ -1137,32 +1165,94 @@
     thumb.style.transform = `translateY(${(pos * BAR_STEP).toFixed(2)}px)`;
   }
 
-  // The effects ease towards the scroll position instead of jumping with each
-  // wheel step, so short transitions still play smoothly.
-  const SCROLL_SMOOTHING_MS = 250;
-  let shown = progress(), followRaf = 0, lastFrame = 0;
-  function follow(now) {
-    const target = progress();
-    const dt = lastFrame ? now - lastFrame : 16;
-    lastFrame = now;
-    shown += (target - shown) * (1 - Math.exp(-dt / SCROLL_SMOOTHING_MS));
-    if (Math.abs(target - shown) < 1e-4) shown = target;
-    render(shown);
-    if (shown === target) { followRaf = 0; lastFrame = 0; }
-    else followRaf = requestAnimationFrame(follow);
-  }
-  const onScroll = () => { if (!followRaf) followRaf = requestAnimationFrame(follow); };
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
-  render(shown);
+  const scrollYFor = view =>
+    scroller.offsetTop + (scroller.offsetHeight - window.innerHeight) * view / TRANSITIONS;
 
-  document.querySelectorAll('[data-goto]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const span = scroller.offsetHeight - window.innerHeight;
-      const top = scroller.offsetTop + span * (+btn.dataset.goto / TRANSITIONS);
-      window.scrollTo({ top, behavior: 'smooth' });
+  if (SNAP) setupSnap(); else setupScrub();
+
+  /* Snap: nothing moves while the scroll stays near a view. Crossing SNAP_THRESHOLD
+     plays the transition over SNAP_MS while the page glides to the next view; input
+     is held off until it lands, including leftover trackpad momentum. Past the last
+     view the page scrolls normally. */
+  function setupSnap() {
+    const SNAP_MS = 1200;
+    const SNAP_THRESHOLD = .08;           // share of a screen of scroll that triggers a snap
+    const MOMENTUM_QUIET_MS = 200;        // wheel must pause this long before it scrolls again
+    let view = Math.round(progress()), shown = view, anim = 0;
+    let lastWheel = 0, holdWheel = false, quietTimer = 0;
+
+    function goTo(target, moveScroll = true) {
+      target = clamp(Math.round(target), 0, TRANSITIONS);
+      cancelAnimationFrame(anim);
+      const fromP = shown, fromY = window.scrollY, toY = scrollYFor(target), t0 = performance.now();
+      view = target;
+      const step = now => {
+        const e = easeInOut(clamp((now - t0) / SNAP_MS));
+        shown = fromP + (target - fromP) * e;
+        render(shown);
+        if (moveScroll) window.scrollTo(0, fromY + (toY - fromY) * e);
+        if (e < 1) { anim = requestAnimationFrame(step); return; }
+        anim = 0;
+        // Swallow the tail of a trackpad flick so it doesn't trigger the next snap
+        if (performance.now() - lastWheel < 100) releaseWheelWhenQuiet();
+      };
+      anim = requestAnimationFrame(step);
+    }
+
+    function releaseWheelWhenQuiet() {
+      holdWheel = true;
+      clearTimeout(quietTimer);
+      quietTimer = setTimeout(() => { holdWheel = false; }, MOMENTUM_QUIET_MS);
+    }
+
+    window.addEventListener('scroll', () => {
+      if (anim) return;
+      const d = progress() - view;
+      if (Math.abs(d) >= 1) goTo(progress(), false);   // big jump (keys, scrollbar): follow without snapping
+      else if (d > SNAP_THRESHOLD && view < TRANSITIONS) goTo(view + 1);
+      else if (d < -SNAP_THRESHOLD && view > 0) goTo(view - 1);
+    }, { passive: true });
+
+    window.addEventListener('wheel', e => {
+      lastWheel = performance.now();
+      if (anim || holdWheel) { e.preventDefault(); if (holdWheel) releaseWheelWhenQuiet(); }
+    }, { passive: false });
+    window.addEventListener('touchmove', e => { if (anim) e.preventDefault(); }, { passive: false });
+    window.addEventListener('keydown', e => {
+      if (anim && ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'].includes(e.key)) e.preventDefault();
     });
-  });
+    window.addEventListener('resize', () => { if (!anim) render(shown); });
+    render(shown);
+
+    document.querySelectorAll('[data-goto]').forEach(btn => {
+      btn.addEventListener('click', () => goTo(+btn.dataset.goto));
+    });
+  }
+
+  /* Scrub: the effects follow the scroll position, easing towards it instead of
+     jumping with each wheel step, so short transitions still play smoothly. */
+  function setupScrub() {
+    const SCROLL_SMOOTHING_MS = 250;
+    let shown = progress(), followRaf = 0, lastFrame = 0;
+    function follow(now) {
+      const target = progress();
+      const dt = lastFrame ? now - lastFrame : 16;
+      lastFrame = now;
+      shown += (target - shown) * (1 - Math.exp(-dt / SCROLL_SMOOTHING_MS));
+      if (Math.abs(target - shown) < 1e-4) shown = target;
+      render(shown);
+      if (shown === target) { followRaf = 0; lastFrame = 0; }
+      else followRaf = requestAnimationFrame(follow);
+    }
+    const onScroll = () => { if (!followRaf) followRaf = requestAnimationFrame(follow); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    render(shown);
+
+    document.querySelectorAll('[data-goto]').forEach(btn => {
+      btn.addEventListener('click', () => window.scrollTo({ top: scrollYFor(+btn.dataset.goto), behavior: 'smooth' }));
+    });
+  }
 
   /* ---------------- Video sync ----------------
      One virtual clock drives all three films. It only advances while every
