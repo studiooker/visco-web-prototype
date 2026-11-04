@@ -392,6 +392,23 @@
   .case__quote p { margin: 0; font: 400 22px/26px var(--font-ui); }
   .case__quote footer { font: 400 15px/21.8px var(--font-ui); text-transform: uppercase; text-align: right; }
 
+  /* ---------- Products (three video cards) ---------- */
+  .products { background: var(--visco-surface-panel); padding: 96px 48px; display: flex; flex-direction: column; gap: 32px; }
+  .products__eyebrow {
+    margin: 0; font: 400 14px/15.6px var(--font-ui); letter-spacing: 0.4222px;
+    text-transform: uppercase; color: #fff;
+  }
+  .products__row { display: flex; gap: 24px; align-items: flex-start; margin: 0; padding: 0; list-style: none; }
+  .product {
+    position: relative; flex: 1 0 0; min-width: 0; height: 520px; overflow: clip;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 24px; border-radius: 4px; color: #fff; text-decoration: none; background: #000;
+  }
+  .product__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .product__shade { position: absolute; inset: 0; mix-blend-mode: multiply; pointer-events: none; }
+  .product__title { position: relative; margin: 0; font: 500 32px/1.05 var(--font-display); white-space: nowrap; }
+  .product__desc { position: relative; margin: 0; min-height: 80px; font: 400 16px/21.8px var(--font-ui); }
+
   @media (max-width: 900px) {
     .nav__btn:not(.nav__burger) { display: none; }
     .title--hero { white-space: normal; width: calc(100% - 32px); }
@@ -449,6 +466,11 @@
     .case__meta { flex: none; }
     .case__text { flex: none; gap: 24px; }
     .case__media { aspect-ratio: 4 / 3; }
+  }
+  @media (max-width: 900px) {
+    .products { padding: 48px var(--section-pad); }
+    .products__row { flex-direction: column; gap: 16px; }
+    .product { flex: none; width: 100%; height: 440px; }
   }
   @media (max-width: 560px) {
     .header .cta--solid > span:first-child { display: none; }
@@ -657,6 +679,29 @@
         </div>
       </div>
     </div>
+  </section>
+  <section class="products" aria-labelledby="products-title">
+    <h2 class="products__eyebrow" id="products-title">There’s more to Visco.</h2>
+    <ul class="products__row">
+      <li class="product">
+        <video class="product__video" src="assets/video/product-stories.mp4" muted playsinline loop preload="metadata" aria-hidden="true"></video>
+        <span class="product__shade" style="background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.44) 12.608%, rgba(0, 0, 0, 0) 34.858%, rgba(0, 0, 0, 0) 64.102%, rgba(0, 0, 0, 0.44) 75.473%)"></span>
+        <h3 class="product__title">Visco Stories</h3>
+        <p class="product__desc">Turn complex systems, products and processes into visual stories people can quickly understand.</p>
+      </li>
+      <li class="product">
+        <video class="product__video" src="assets/video/product-interactive.mp4" muted playsinline loop preload="metadata" aria-hidden="true"></video>
+        <span class="product__shade" style="background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 12.608%, rgba(0, 0, 0, 0) 34.858%, rgba(0, 0, 0, 0) 64.102%, rgba(0, 0, 0, 0.4) 86.068%)"></span>
+        <h3 class="product__title">Visco Interactive</h3>
+        <p class="product__desc">Create hands-on visual experiences that make technical detail easier to explore, present and understand.</p>
+      </li>
+      <li class="product">
+        <video class="product__video" src="assets/video/product-configure.mp4" muted playsinline loop preload="metadata" aria-hidden="true"></video>
+        <span class="product__shade" style="background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 12.608%, rgba(0, 0, 0, 0) 34.858%, rgba(0, 0, 0, 0) 64.102%, rgba(0, 0, 0, 0.4) 86.068%)"></span>
+        <h3 class="product__title">Visco Configure</h3>
+        <p class="product__desc">Turn complex product logic into visual experiences that improve accuracy, flexibility and speed.</p>
+      </li>
+    </ul>
   </section>
 </main>
 
@@ -1094,6 +1139,20 @@
   }, { threshold: .35 }).observe(benefits);
 
   selectTab(0);
+
+  /* ---------------- Product videos ----------------
+     The three card videos play while the section is on screen and pause
+     when it scrolls away; with reduced motion they show their first frame. */
+  const productVideos = [...document.querySelectorAll('.product__video')];
+  if (productVideos.length) {
+    new IntersectionObserver(([entry]) => {
+      productVideos.forEach(v => {
+        if (!entry.isIntersecting) v.pause();
+        else if (autoplay) v.play().catch(() => {});
+        else v.preload = 'auto';
+      });
+    }, { threshold: .25 }).observe(document.querySelector('.products'));
+  }
 
   /* ---------------- Dash build-in for titles ----------------
      The text stays still; it shows through a mask of dashes. The right half
