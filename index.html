@@ -325,6 +325,7 @@
   .workbench__body p { margin: 0; }
   .workbench__body p + p { margin-top: 21.8px; }
   .workbench__cards { display: contents; list-style: none; }
+  .workbench__cta { align-self: flex-start; margin-top: 16px; }   /* sized to its label, 40px below the last card */
   .wb-card {
     display: flex; gap: 16px; align-items: flex-start;
     padding: 12px; border-radius: 4px; background: #494949;
@@ -397,14 +398,14 @@
   .flow__intro p + p { margin-top: 19px; }
   .flow__intro::after { content: ""; display: block; height: 38px; }  /* two empty lines in Figma */
   /* Button with arrow (Figma "button"): label trimmed to cap height, 12px gap, arrow icon */
-  .flow__cta, .case__cta {
+  .flow__cta, .case__cta, .closing__cta {
     display: inline-flex; align-items: center; justify-content: center; gap: 12px;
     padding: 12px 12px 12px 18px; border-radius: 2px; color: var(--visco-text-on-dark);
     font: 400 15px/22px var(--font-ui); letter-spacing: 0.64px;
     text-decoration: none; white-space: nowrap;
   }
-  .flow__cta > span, .case__cta > span { text-box: trim-both cap alphabetic; }
-  .flow__cta > img, .case__cta > img { display: block; flex-shrink: 0; }
+  .flow__cta > span, .case__cta > span, .closing__cta > span { text-box: trim-both cap alphabetic; }
+  .flow__cta > img, .case__cta > img, .closing__cta > img { display: block; flex-shrink: 0; }
   .flow__cta { background: var(--visco-surface-accent); }
   /* Letter drop-in: each letter is its own box so it can move on its own */
   .drop-word { display: inline-block; white-space: nowrap; }
@@ -526,12 +527,7 @@
   .closing__title::after { content: ""; display: block; height: .41em; }   /* 176.8px box for 144px of text in Figma */
   .closing__copy { margin: 0; max-width: 498.43px; font: 400 16px/21.8px var(--font-ui); }
   /* Button sits at the bottom left of the card */
-  .closing__cta {
-    margin-top: auto; display: inline-flex; align-items: center; justify-content: center;
-    padding: 12px 24px; border-radius: 4px; background: var(--visco-surface-panel);
-    font: 500 16px/24px var(--font-ui); letter-spacing: 0.64px; text-transform: uppercase;
-    color: var(--visco-text-on-dark); text-decoration: none; white-space: nowrap;
-  }
+  .closing__cta { margin-top: auto; align-self: flex-start; background: var(--visco-surface-panel); }
 
   @media (max-width: 900px) {
     .nav__btn:not(.nav__burger) { display: none; }
@@ -789,6 +785,7 @@
             <span class="wb-card__text"><span class="wb-card__label">Act</span>Put workflows and tools around the task and move work forward.</span>
           </li>
         </ul>
+        <a class="flow__cta workbench__cta" href="#"><span>Explore Visco Workbench</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a>
       </div>
     </div>
   </section>
@@ -901,7 +898,7 @@
       <div class="closing__content">
         <h2 class="closing__title" id="closing-title">Make every step workable</h2>
         <p class="closing__copy">Bring your asset, drawings, data and workflows into one connected environment, so your teams can find what they need, understand the full picture and move the work forward.</p>
-        <a class="closing__cta" href="#">Talk to an expert →</a>
+        <a class="closing__cta" href="#"><span>Talk to an expert</span><img src="assets/icons/arrow-right.svg" width="13.9839" height="12" alt=""></a>
       </div>
       <img class="closing__field" src="assets/closing-field.svg" width="718" height="732" alt="">
     </div>
