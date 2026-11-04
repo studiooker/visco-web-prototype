@@ -168,7 +168,7 @@
   /* ---------- Approach hero (Figma 278:21884) ---------- */
   .ap-hero {
     background: var(--visco-surface-panel);
-    padding: 180px 24px 96px;
+    padding: 180px 24px 0;   /* the space under the film comes from the next section's top padding */
     display: flex; flex-direction: column; gap: 48px;
   }
   .ap-hero__row { display: flex; gap: 32px; align-items: flex-start; }
@@ -198,7 +198,7 @@
      Steps scroll past normally. The step that has crossed the middle of the
      viewport becomes active: it goes to full opacity, the dash slides down to
      it, and its image fades in. The image stays in view (sticky) on the left. */
-  .gs { background: var(--visco-surface-panel); padding: 96px 24px 52px; display: flex; flex-direction: column; gap: 82px; }
+  .gs { background: var(--visco-surface-panel); padding: 160px 24px 52px; display: flex; flex-direction: column; gap: 82px; }
   .gs__head { display: flex; flex-direction: column; align-items: center; gap: 12px; color: #fff; text-align: center; }
   .gs__eyebrow { margin: 0; min-height: 16px; font: 400 14px/15.6px var(--font-ui); letter-spacing: 0.4222px; text-transform: uppercase; }
   .gs__title { margin: 0; font: 500 60px/72px var(--font-display); }
@@ -322,7 +322,7 @@
     .nav-wrap { position: static; }
     .menu { --menu-x: 0; position: fixed; top: 62px; left: 16px; width: auto; right: 16px; }
 
-    .ap-hero { padding: 118px var(--section-pad) 48px; gap: 32px; }
+    .ap-hero { padding: 118px var(--section-pad) 0; gap: 32px; }
     .ap-hero__row { flex-direction: column; gap: 24px; }
     .ap-hero__head, .ap-hero__intro { flex: none; width: 100%; }
     .ap-hero__title { font-size: 40px; line-height: 44px; max-width: 300px; }
@@ -330,7 +330,7 @@
     .ap-hero__media { aspect-ratio: 4 / 3; }
 
     /* Getting started: image on top and kept in view under the header, steps underneath */
-    .gs { padding: 48px var(--section-pad); gap: 32px; }
+    .gs { padding: 80px var(--section-pad) 48px; gap: 32px; }
     .gs__head { align-items: flex-start; text-align: left; gap: 8px; }
     .gs__title { font-size: 36px; line-height: 40px; }
     .gs__row { flex-direction: column; gap: 24px; }
