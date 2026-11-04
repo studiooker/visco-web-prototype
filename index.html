@@ -294,7 +294,7 @@
   .stats { background: var(--visco-surface-panel); padding: 48px 24px; }
   .stats__row { display: flex; gap: 24px; align-items: center; margin: 0; padding: 0; list-style: none; }
   .stat {
-    position: relative; flex: 1 0 0; min-width: 0; height: 480px; overflow: clip;
+    position: relative; flex: 1 0 0; min-width: 0; aspect-ratio: 6 / 7; min-height: 380px; overflow: clip;
     display: flex; flex-direction: column; gap: 30px; align-items: flex-start;
     padding: 12px 24px 24px; border-radius: 4px; background: #000;
   }
@@ -423,7 +423,7 @@
   @media (max-width: 900px) {
     .stats { padding: 32px var(--section-pad); }
     .stats__row { flex-direction: column; gap: 16px; align-items: stretch; }
-    .stat { flex: none; height: 400px; }
+    .stat { flex: none; }
     .stat__value { font-size: 72px; }
     .stat__photo { width: 80%; height: auto; aspect-ratio: 453.77 / 223.791; }
   }
