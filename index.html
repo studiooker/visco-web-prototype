@@ -26,6 +26,13 @@
     font-weight: 400;
     font-display: block;
   }
+  @font-face {
+    font-family: "Test Die Grotesk A";
+    src: local("TestDieGrotesk-A-Medium"),
+         url("assets/fonts/TestDieGrotesk-A-Medium.otf") format("opentype");
+    font-weight: 500;
+    font-display: block;
+  }
 
   :root {
     --visco-surface-accent: #3941d9;
@@ -236,6 +243,81 @@
   .logo-equinor__mark { inset: 0 0.01% 14.92% 71.62%; width: auto; height: auto; }
   .logo-equinor__word { inset: 54.91% 33.36% 0 0.01%; width: auto; height: auto; }
 
+  /* ---------- Workbench ---------- */
+  .workbench { background: var(--visco-surface-panel); padding: 96px 24px; display: flex; flex-direction: column; gap: 32px; }
+  .workbench__eyebrow {
+    margin: 0; font: 400 15px/15.6px var(--font-ui); letter-spacing: 0.4222px;
+    text-transform: uppercase; color: #fff;
+  }
+  /* 12-column grid, 24px gutters: media on columns 1–6, text on 8–12 */
+  .workbench__row { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; align-items: start; }
+  .workbench__media { grid-column: 1 / span 6; aspect-ratio: 684 / 487; border-radius: 4.267px; overflow: clip; }
+  .workbench__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .workbench__text { grid-column: 8 / span 5; display: flex; flex-direction: column; gap: 24px; }
+  .workbench__text > *, .wb-card { max-width: 525px; }
+  .workbench__title {
+    margin: 0; font: 500 32px/48px var(--font-display); color: var(--visco-text-on-dark);
+    text-box: trim-both cap alphabetic;
+  }
+  .workbench__body { margin: 0 0 21.8px; font: 400 15px/21.8px var(--font-ui); color: #fff; }
+  .workbench__body p { margin: 0; }
+  .workbench__body p + p { margin-top: 21.8px; }
+  .workbench__cards { display: contents; list-style: none; }
+  .wb-card {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 12px; border-radius: 4px; background: #494949;
+  }
+  .wb-card__icon { flex-shrink: 0; padding: 6px; display: flex; }
+  .wb-card__text { flex: 1 0 0; min-width: 0; font: 400 15px/22.588px var(--font-ui); color: #fff; }
+  .wb-card__label { display: block; text-transform: uppercase; }
+  /* Visco icons: artwork boxes and masks as in Figma */
+  .icon36 { position: relative; display: block; width: 36px; height: 36px; }
+  .icon36 img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; max-width: none; }
+  .icon36__art { position: absolute; overflow: clip; }
+  .icon36__art--collapse { inset: 3.13%; overflow: visible; }
+  .icon36__art--checkbox { inset: 11.98% 1.04%; }
+  .icon36__art--add { inset: 4.69%; }
+  .icon36__group { position: absolute; }
+  .icon36__group--checkbox {
+    inset: 0 1% 0.58% 0;
+    -webkit-mask: url("assets/icons/checkbox-mask.svg") 0 0 / 34.898px 27.215px no-repeat;
+            mask: url("assets/icons/checkbox-mask.svg") 0 0 / 34.898px 27.215px no-repeat;
+  }
+  .icon36__group--add {
+    inset: 0 1.01% 0.98% 0;
+    -webkit-mask: url("assets/icons/add-mask.svg") 0 0 / 32.306px 32.306px no-repeat;
+            mask: url("assets/icons/add-mask.svg") 0 0 / 32.306px 32.306px no-repeat;
+  }
+
+  /* ---------- Flow (title + intro) ---------- */
+  .flow { background: var(--visco-surface-panel); padding: 96px 48px; }
+  .flow__row { display: flex; gap: 32px; align-items: flex-start; }
+  .flow__col { flex: 1 0 0; min-width: 0; }
+  .flow__title {
+    position: relative; margin: 0; max-width: 10.5654em;   /* 633.922px at 60px */
+    font: 500 clamp(36px, 4.1667vw, 60px)/1.05 var(--font-display); color: var(--visco-surface-accent);
+  }
+  .flow__intro { padding: 18px 0 8px; font: 400 15px/19px var(--font-ui); color: #fff; max-width: 572.096px; }
+  .flow__intro p { margin: 0; }
+  .flow__intro p + p { margin-top: 19px; }
+  .flow__intro::after { content: ""; display: block; height: 38px; }  /* two empty lines in Figma */
+  .flow__cta {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: var(--visco-space-sm, 12px) var(--visco-space-md, 24px); border-radius: 4px;
+    background: var(--visco-surface-accent); color: var(--visco-text-on-dark);
+    font: 500 16px/24px var(--font-ui); letter-spacing: 0.64px; text-transform: uppercase;
+    text-decoration: none; white-space: nowrap;
+  }
+  /* Dash build-in: the title shows through dashes that rise from below, then merge */
+  .flow__title.is-building { color: transparent; }
+  .dash-cols { position: absolute; inset: 0; pointer-events: none; }
+  .dash-col { position: absolute; top: 0; overflow: hidden; }
+  .dash-col > span {
+    position: absolute; top: 0; white-space: normal;
+    font: inherit; color: var(--visco-surface-accent);
+  }
+  .dash-col > .dash-ghost { inset: 0; background: var(--visco-surface-accent); }
+
   @media (max-width: 900px) {
     .nav__btn:not(.nav__burger) { display: none; }
     .title--hero { white-space: normal; width: calc(100% - 32px); }
@@ -258,6 +340,17 @@
     .logos__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 16px; justify-items: center; }
     .logos__row > li { max-width: 100%; }
     .logos__row > li > img { max-width: 100%; height: auto; }
+  }
+  @media (max-width: 900px) {
+    .workbench { padding: 48px var(--section-pad); }
+    .workbench__row { grid-template-columns: minmax(0, 1fr); row-gap: 32px; }
+    .workbench__media, .workbench__text { grid-column: 1; }
+    .workbench__text > *, .wb-card { max-width: none; }
+  }
+  @media (max-width: 900px) {
+    .flow { padding: 48px var(--section-pad); }
+    .flow__row { flex-direction: column; gap: 24px; }
+    .flow__col { flex: none; width: 100%; }
   }
   @media (max-width: 560px) {
     .header .cta--solid > span:first-child { display: none; }
@@ -374,6 +467,49 @@
       <li><img src="assets/logos/exxonmobil.svg" width="116.624" height="22" alt="ExxonMobil"></li>
       <li class="logos__dim"><img src="assets/logos/chevron.svg" width="35.8518" height="40" alt="Chevron"></li>
     </ul>
+  </section>
+  <section class="workbench" aria-labelledby="workbench-title">
+    <p class="workbench__eyebrow">Visco Workbench</p>
+    <div class="workbench__row">
+      <div class="workbench__media">
+        <img src="assets/workbench.webp" width="684" height="487" alt="Visco Workbench showing a leak observation card over a photo of an industrial plant: reported level 3, sweating at A-20BL0094.">
+      </div>
+      <div class="workbench__text">
+        <h2 class="workbench__title" id="workbench-title">Where the work comes together</h2>
+        <div class="workbench__body">
+          <p>Visco Workbench transforms fragmented information into one visual operational environment.</p>
+          <p>Drawings, scans, models, systems, data and workflows come together around the physical reality of the asset, giving teams one place to understand, coordinate and act.</p>
+        </div>
+        <ul class="workbench__cards" role="list">
+          <li class="wb-card">
+            <span class="wb-card__icon"><span class="icon36"><span class="icon36__art icon36__art--collapse"><img src="assets/icons/collapse.svg" alt=""></span></span></span>
+            <span class="wb-card__text"><span class="wb-card__label">Connect</span>Bring fragmented operational information into one environment.</span>
+          </li>
+          <li class="wb-card">
+            <span class="wb-card__icon"><span class="icon36"><span class="icon36__art icon36__art--checkbox"><span class="icon36__group icon36__group--checkbox"><img src="assets/icons/checkbox.svg" alt=""></span></span></span></span>
+            <span class="wb-card__text"><span class="wb-card__label">Understand</span>Navigate the asset and see information in its real-world context.</span>
+          </li>
+          <li class="wb-card">
+            <span class="wb-card__icon"><span class="icon36"><span class="icon36__art icon36__art--add"><span class="icon36__group icon36__group--add"><img src="assets/icons/add.svg" alt=""></span></span></span></span>
+            <span class="wb-card__text"><span class="wb-card__label">Act</span>Put workflows and tools around the task and move work forward.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  <section class="flow" aria-labelledby="flow-title">
+    <div class="flow__row">
+      <div class="flow__col">
+        <h2 class="flow__title" id="flow-title" data-dash-build>From fragments to one operational flow.</h2>
+      </div>
+      <div class="flow__col">
+        <div class="flow__intro">
+          <p>Complex operations run across countless systems, drawings, models, people and handovers.</p>
+          <p>Visco connects them in one shared operational environment, creating a clearer path through the work from understanding to execution. One environment. One shared context. One operational flow.</p>
+        </div>
+        <a class="flow__cta" href="#">About us →</a>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -811,6 +947,160 @@
   }, { threshold: .35 }).observe(benefits);
 
   selectTab(0);
+
+  /* ---------------- Dash build-in for titles ----------------
+     The text stays still; it shows through a mask of dashes. The right half
+     of the title is always visible. On the left half, each column's stack
+     of dashes slides up from below into place, starting at the centre and
+     spreading to the left edge. Every dash has its own position, length
+     and timing, so they arrive scattered rather than as one even wave.
+     The dashes are faintly visible outside the letters too; that fades
+     before they widen and merge into the solid title. Progress runs from
+     the title's top edge entering the viewport (0) to it being BUILD_END
+     of the viewport in (1). */
+  const BUILD_END = .2;           // fully built at 20% into the viewport
+  const COL_W = .2;               // column width, in em (12px at 60px)
+  const CELL_H = .45;             // dash cell height, in em
+  const STAGGER = .6;             // share of the progress spent spreading from centre to left edge;
+                                  // each column then takes the rest (1 - STAGGER) to land, so the
+                                  // centre lands at 1 - STAGGER and the left edge at 1
+  const GHOST = .35;              // opacity of the dashes outside the letters while they move
+  const COL_SCATTER = .12;        // random shift of each column's start, in share of the progress
+  const DASH_DELAY = .45;         // spread of start times between dashes in one column
+  const DASH_JITTER = .6;         // random vertical offset of each dash, in cells
+  const GLIDE = .22;              // seconds the build takes to catch up with the scroll
+  const easeOutQuint = t => 1 - Math.pow(1 - t, 5);
+
+  // Repeatable pseudo-random numbers, so the pattern is the same on every layout
+  const rand = (...k) => { const x = Math.sin(k.reduce((a, v, i) => a + v * (12.9898 + i * 78.233), 0)) * 43758.5453; return x - Math.floor(x); };
+
+  const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+
+  const builders = [...document.querySelectorAll('[data-dash-build]')].map(title => {
+    const text = title.textContent;
+    const layer = document.createElement('span');
+    layer.className = 'dash-cols';
+    layer.setAttribute('aria-hidden', 'true');
+    title.appendChild(layer);
+    let cols = [], em = 1, built = null;
+    let shown = null, target = 0, last = 0, raf = 0;     // eased progress chasing the scroll position
+
+    function layout() {
+      em = parseFloat(getComputedStyle(title).fontSize);
+      const w = title.clientWidth, h = title.clientHeight + .3 * em;   // room for descenders
+      const cw = COL_W * em, n = Math.ceil(w / cw);
+      layer.textContent = '';
+      cols = [];
+      for (let i = 0; i < n; i++) {
+        const col = document.createElement('span');
+        col.className = 'dash-col';
+        col.style.cssText = `left:${i * cw}px;width:${cw}px;height:${h}px`;
+        // Distance from the centre towards the left edge: 0 at the centre, 1 at the left edge.
+        // Columns right of the centre are always shown.
+        const d = ((w / 2) - (i + .5) * cw) / (w / 2);
+        let ghost = null;
+        if (d > 0) {
+          ghost = document.createElement('span');
+          ghost.className = 'dash-ghost';
+          col.appendChild(ghost);
+        }
+        const copy = document.createElement('span');
+        copy.textContent = text;
+        copy.style.cssText = `left:${-i * cw}px;width:${w}px`;
+        col.appendChild(copy);
+        layer.appendChild(col);
+        const cell = CELL_H * em, rows = Math.ceil(h / cell) + 1;
+        const dashes = Array.from({ length: rows }, (_, k) => ({
+          home: k * cell,                                            // where it ends up when merged
+          y: (k + (rand(i, k, 1) - .5) * DASH_JITTER) * cell,        // scattered resting position
+          len: (.35 + .5 * rand(i, k, 2)) * cell,                    // scattered length
+          delay: rand(i, k, 3) * DASH_DELAY,
+        }));
+        const start = clamp(d * STAGGER + (rand(i, 0, 4) - .5) * COL_SCATTER, 0, STAGGER);
+        cols.push({ el: col, ghost, start, dashes, width: .3 + .25 * rand(i, 0, 5), fixed: d <= 0 });
+        if (d > 0) {
+          col.style.webkitMaskRepeat = col.style.maskRepeat = 'no-repeat';
+          col.style.webkitMaskSize = col.style.maskSize = '100% 100%';
+        }
+      }
+      built = null;
+      shown = null;
+      update();
+    }
+
+    // Read the scroll position, then glide towards it frame by frame
+    function update() {
+      const r = title.getBoundingClientRect(), vh = window.innerHeight;
+      target = autoplay ? clamp((vh - r.top) / (vh * BUILD_END)) : 1;
+      if (shown === null) shown = target;                 // first layout: jump straight there
+      if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+    }
+
+    function step(now) {
+      const dt = Math.min(.1, (now - last) / 1000);
+      last = now;
+      shown += (target - shown) * (1 - Math.exp(-dt / GLIDE));
+      if (Math.abs(target - shown) < .001) shown = target;
+      draw(shown);
+      raf = shown === target ? 0 : requestAnimationFrame(step);
+    }
+
+    function draw(p) {
+      const done = p >= 1;
+      if (done !== built) {                                   // swap to the real text once complete
+        built = done;
+        title.classList.toggle('is-building', !done);
+        layer.style.display = done ? 'none' : '';
+      }
+      if (done) return;
+      const cell = CELL_H * em;
+      cols.forEach(c => {
+        if (c.fixed) return;                                  // right half: always visible
+        const t = clamp((p - c.start) / (1 - STAGGER));     // same duration for every column
+        const merge = smooth(.6, 1, t);
+        const h = c.el.clientHeight;
+        c.el.style.clipPath = `inset(0 ${((1 - (c.width + (1 - c.width) * merge)) * 50).toFixed(2)}%)`;
+        c.ghost.style.opacity = (GHOST * (1 - smooth(.4, .65, t))).toFixed(3);   // gone before the dashes widen
+        if (merge >= 1) {
+          c.el.style.webkitMaskImage = c.el.style.maskImage = 'none';
+          return;
+        }
+        // Each dash rises from below on its own schedule; the text never moves
+        const spans = [];
+        c.dashes.forEach(dash => {
+          const td = clamp((t - dash.delay) / (1 - DASH_DELAY));
+          const rise = (1 - easeOutQuint(td)) * (h + cell * (1 + DASH_JITTER));   // starts fully below the column
+          const y0 = dash.y + (dash.home - dash.y) * merge + rise;
+          const y1 = y0 + dash.len + (cell + 1 - dash.len) * merge;
+          if (y0 < h && y1 > 0) spans.push([Math.max(0, y0), Math.min(h, y1)]);
+        });
+        spans.sort((a, b) => a[0] - b[0]);
+        const stops = [];
+        let open = null;
+        spans.forEach(([a, b]) => {                           // join overlapping dashes
+          if (open && a <= open[1]) open[1] = Math.max(open[1], b);
+          else { if (open) stops.push(open); open = [a, b]; }
+        });
+        if (open) stops.push(open);
+        const g = stops.map(([a, b]) => `transparent ${a.toFixed(1)}px, #000 ${a.toFixed(1)}px, #000 ${b.toFixed(1)}px, transparent ${b.toFixed(1)}px`);
+        c.el.style.webkitMaskImage = c.el.style.maskImage =
+          `linear-gradient(to bottom, ${g.length ? g.join(', ') : 'transparent 0, transparent 100%'})`;
+      });
+    }
+    return { layout, update };
+  });
+
+  if (builders.length) {
+    let raf = 0;
+    const tick = () => { raf = 0; builders.forEach(b => b.update()); };
+    window.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(tick); }, { passive: true });
+    let resizeTimer = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => builders.forEach(b => b.layout()), 150);
+    });
+    document.fonts.ready.then(() => builders.forEach(b => b.layout()));
+  }
 })();
 </script>
 </body>
