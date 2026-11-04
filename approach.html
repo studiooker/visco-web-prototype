@@ -209,7 +209,7 @@
      It glides down with the dash as the active step changes (never past the row's end). */
   .gs__media {
     position: relative; width: 443px; max-width: calc(100% - 39px); aspect-ratio: 443 / 243;
-    margin: 11px 39px 0 auto; overflow: clip; background: #000;
+    margin: 11px 39px 0 auto; overflow: clip; border-radius: 4px; background: #000;
     transition: transform .5s cubic-bezier(.2, .8, .2, 1); will-change: transform;
   }
   .gs__media img {
@@ -253,10 +253,11 @@
   .ap-split__body p + p { margin-top: 21.8px; }   /* empty line between paragraphs in Figma */
 
   /* ---------- How we work (Figma 278:1871) ---------- */
-  .ap-steps { background: var(--visco-surface-panel); padding: 48px; display: flex; flex-direction: column; gap: 10px; }
-  .ap-steps__row { display: flex; gap: 24px; align-items: flex-start; max-width: 1600px; }
-  .ap-steps__col { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 24px; color: #fff; }
-  .ap-steps__col > * { margin: 0; font: 400 14px/19.765px var(--font-ui); }
+  .ap-steps { background: var(--visco-surface-panel); padding: 68px 24px; }
+  .ap-steps__row { display: flex; gap: 24px; align-items: flex-start; }
+  .ap-steps__col { flex: 1 0 0; min-width: 0; padding-right: 24px; display: flex; flex-direction: column; gap: 24px; color: #fff; }
+  .ap-steps__col > h3 { margin: 0; font: 500 32px/1.05 var(--font-display); }
+  .ap-steps__col > p { margin: 0; font: 400 14px/19.765px var(--font-ui); }
 
   /* ---------- People (Figma 278:1933) ---------- */
   .ap-people { padding-bottom: 48px; }
@@ -351,7 +352,8 @@
 
     .ap-steps { padding: 48px var(--section-pad); }
     .ap-steps__row { flex-direction: column; gap: 32px; }
-    .ap-steps__col { flex: none; width: 100%; gap: 8px; }
+    .ap-steps__col { flex: none; width: 100%; padding-right: 0; gap: 12px; }
+    .ap-steps__col > h3 { font-size: 28px; }
 
     .ap-basics { padding: 48px var(--section-pad); }
     .ap-basics__card { padding: 16px; }
@@ -444,8 +446,7 @@
     </div>
   </section>
 
-  <section class="ap-steps" aria-labelledby="steps-title">
-    <p class="ap-label" id="steps-title">How we work:</p>
+  <section class="ap-steps" aria-label="How we work">
     <div class="ap-steps__row">
       <div class="ap-steps__col">
         <h3>Start with the work</h3>
