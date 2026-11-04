@@ -220,6 +220,22 @@
     .tab, .tab__text, .benefits__media-item { transition: none; }
   }
 
+  /* ---------- Logos ---------- */
+  .logos { background: var(--visco-surface-panel); padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+  .logos__eyebrow {
+    margin: 0; font: 400 15px/22.588px var(--font-ui); text-transform: uppercase;
+    color: #fff; opacity: .5; white-space: nowrap;
+  }
+  .logos__row { display: flex; align-items: center; justify-content: space-between; margin: 0; padding: 0; list-style: none; }
+  .logos__row li { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .logos__row img { display: block; }
+  .logos__dim { opacity: .8; }
+  /* Equinor: wordmark and mark placed as in Figma inside a 101×40 box */
+  .logo-equinor { position: relative; width: 101.148px; height: 40px; }
+  .logo-equinor img { position: absolute; }
+  .logo-equinor__mark { inset: 0 0.01% 14.92% 71.62%; width: auto; height: auto; }
+  .logo-equinor__word { inset: 54.91% 33.36% 0 0.01%; width: auto; height: auto; }
+
   @media (max-width: 900px) {
     .nav__btn:not(.nav__burger) { display: none; }
     .title--hero { white-space: normal; width: calc(100% - 32px); }
@@ -236,6 +252,12 @@
     .tab__num { flex-basis: 48px; font-size: 24px; line-height: 36px; height: 36px; }
     .tab__title { font-size: 24px; line-height: 36px; }
     .tab__track { margin-top: 10px; }
+  }
+  @media (max-width: 900px) {
+    .logos { padding: 24px var(--section-pad); }
+    .logos__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 16px; justify-items: center; }
+    .logos__row > li { max-width: 100%; }
+    .logos__row > li > img { max-width: 100%; height: auto; }
   }
   @media (max-width: 560px) {
     .header .cta--solid > span:first-child { display: none; }
@@ -336,6 +358,22 @@
         <img class="benefits__media-item" data-media="screen" src="assets/benefits-controls.webp" alt="Hands on physical control knobs placed on a large touchscreen showing a sea chart.">
       </div>
     </div>
+  </section>
+  <section class="logos" aria-labelledby="logos-title">
+    <p class="logos__eyebrow" id="logos-title">We’re in good company</p>
+    <ul class="logos__row">
+      <li class="logos__dim"><img src="assets/logos/conocophillips.svg" width="133.435" height="30.0001" alt="ConocoPhillips"></li>
+      <li class="logos__dim">
+        <span class="logo-equinor" role="img" aria-label="Equinor">
+          <img class="logo-equinor__mark" src="assets/logos/equinor-mark.svg" width="28.6893" height="34.0336" alt="">
+          <img class="logo-equinor__word" src="assets/logos/equinor-wordmark.svg" width="67.4003" height="18.0363" alt="">
+        </span>
+      </li>
+      <li><img src="assets/logos/aker-solutions.svg" width="105.622" height="30" alt="Aker Solutions"></li>
+      <li class="logos__dim"><img src="assets/logos/siemens-energy.svg" width="87.4636" height="30" alt="Siemens Energy"></li>
+      <li><img src="assets/logos/exxonmobil.svg" width="116.624" height="22" alt="ExxonMobil"></li>
+      <li class="logos__dim"><img src="assets/logos/chevron.svg" width="35.8518" height="40" alt="Chevron"></li>
+    </ul>
   </section>
 </main>
 
