@@ -406,15 +406,9 @@
   .flow__cta > span, .case__cta > span, .closing__cta > span { text-box: trim-both cap alphabetic; }
   .flow__cta > img, .case__cta > img, .closing__cta > img { display: block; flex-shrink: 0; }
   .flow__cta { background: var(--visco-surface-accent); }
-  /* Dash build-in: the title shows through dashes that rise from below, then merge */
-  .flow__title.is-building { color: transparent; }
-  .dash-cols { position: absolute; inset: 0; pointer-events: none; }
-  .dash-col { position: absolute; top: 0; overflow: hidden; }
-  .dash-col > span {
-    position: absolute; top: 0; white-space: normal;
-    font: inherit; color: var(--visco-text-on-dark);
-  }
-  .dash-col > .dash-ghost { inset: 0; background: var(--visco-text-on-dark); }
+  /* Letter drop-in: each letter is its own box so it can move on its own */
+  .drop-word { display: inline-block; white-space: nowrap; }
+  .drop-ch { display: inline-block; white-space: pre; will-change: transform, opacity; }
 
   /* ---------- Case ---------- */
   .case { background: var(--visco-surface-panel); padding: 48px 24px; }
@@ -761,7 +755,7 @@
   <section class="flow" aria-labelledby="flow-title">
     <div class="flow__row">
       <div class="flow__col">
-        <h2 class="flow__title" id="flow-title" data-dash-build>From fragments to one operational flow.</h2>
+        <h2 class="flow__title" id="flow-title" data-letter-drop>From fragments to one operational flow.</h2>
       </div>
       <div class="flow__col">
         <div class="flow__intro">
@@ -1580,82 +1574,51 @@
     });
   }
 
-  /* ---------------- Dash build-in for titles ----------------
-     The text stays still; it shows through a mask of dashes. The right half
-     of the title is always visible. On the left half, each column's stack
-     of dashes slides up from below into place, starting at the centre and
-     spreading to the left edge. Every dash has its own position, length
-     and timing, so they arrive scattered rather than as one even wave.
-     The dashes are faintly visible outside the letters too; that fades
-     before they widen and merge into the solid title. Progress runs from
-     the title's top edge entering the viewport (0) to it being BUILD_END
-     of the viewport in (1). */
+  /* ---------------- Letter drop-in for titles ----------------
+     The right half of the title is always visible. On the left half, the
+     letters drop in from above one after another, starting at the centre
+     and running to the left edge. Progress runs from the title's top edge
+     entering the viewport (0) to it being BUILD_END of the viewport in (1). */
   const BUILD_END = .2;           // fully built at 20% into the viewport
-  const COL_W = .2;               // column width, in em (12px at 60px)
-  const CELL_H = .45;             // dash cell height, in em
-  const STAGGER = .6;             // share of the progress spent spreading from centre to left edge;
-                                  // each column then takes the rest (1 - STAGGER) to land, so the
-                                  // centre lands at 1 - STAGGER and the left edge at 1
-  const GHOST = .35;              // opacity of the dashes outside the letters while they move
-  const COL_SCATTER = .12;        // random shift of each column's start, in share of the progress
-  const DASH_DELAY = .45;         // spread of start times between dashes in one column
-  const DASH_JITTER = .6;         // random vertical offset of each dash, in cells
+  const STAGGER = .7;             // share of the progress spent going from the centre to the left edge;
+                                  // each letter then takes the rest (1 - STAGGER) to land
+  const DROP = .55;               // how far above its place a letter starts, in em
   const GLIDE = .22;              // seconds the build takes to catch up with the scroll
-  const easeOutQuint = t => 1 - Math.pow(1 - t, 5);
-
-  // Repeatable pseudo-random numbers, so the pattern is the same on every layout
-  const rand = (...k) => { const x = Math.sin(k.reduce((a, v, i) => a + v * (12.9898 + i * 78.233), 0)) * 43758.5453; return x - Math.floor(x); };
-
+  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
   const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
 
-  const builders = [...document.querySelectorAll('[data-dash-build]')].map(title => {
-    const text = title.textContent;
-    const layer = document.createElement('span');
-    layer.className = 'dash-cols';
-    layer.setAttribute('aria-hidden', 'true');
-    title.appendChild(layer);
-    let cols = [], em = 1, built = null;
+  const builders = [...document.querySelectorAll('[data-letter-drop]')].map(title => {
+    const text = title.textContent.trim();
+    title.setAttribute('aria-label', text);
+    title.textContent = '';
+    const letters = [];
+    text.split(/(\s+)/).forEach(part => {
+      if (!part) return;
+      if (/^\s+$/.test(part)) { title.appendChild(document.createTextNode(' ')); return; }
+      const word = document.createElement('span');      // keeps a word on one line
+      word.className = 'drop-word';
+      word.setAttribute('aria-hidden', 'true');
+      [...part].forEach(ch => {
+        const el = document.createElement('span');
+        el.className = 'drop-ch';
+        el.textContent = ch;
+        word.appendChild(el);
+        letters.push({ el, start: 0, fixed: true });
+      });
+      title.appendChild(word);
+    });
     let shown = null, target = 0, last = 0, raf = 0;     // eased progress chasing the scroll position
 
     function layout() {
-      em = parseFloat(getComputedStyle(title).fontSize);
-      const w = title.clientWidth, h = title.clientHeight + .3 * em;   // room for descenders
-      const cw = COL_W * em, n = Math.ceil(w / cw);
-      layer.textContent = '';
-      cols = [];
-      for (let i = 0; i < n; i++) {
-        const col = document.createElement('span');
-        col.className = 'dash-col';
-        col.style.cssText = `left:${i * cw}px;width:${cw}px;height:${h}px`;
-        // Distance from the centre towards the left edge: 0 at the centre, 1 at the left edge.
-        // Columns right of the centre are always shown.
-        const d = ((w / 2) - (i + .5) * cw) / (w / 2);
-        let ghost = null;
-        if (d > 0) {
-          ghost = document.createElement('span');
-          ghost.className = 'dash-ghost';
-          col.appendChild(ghost);
-        }
-        const copy = document.createElement('span');
-        copy.textContent = text;
-        copy.style.cssText = `left:${-i * cw}px;width:${w}px`;
-        col.appendChild(copy);
-        layer.appendChild(col);
-        const cell = CELL_H * em, rows = Math.ceil(h / cell) + 1;
-        const dashes = Array.from({ length: rows }, (_, k) => ({
-          home: k * cell,                                            // where it ends up when merged
-          y: (k + (rand(i, k, 1) - .5) * DASH_JITTER) * cell,        // scattered resting position
-          len: (.35 + .5 * rand(i, k, 2)) * cell,                    // scattered length
-          delay: rand(i, k, 3) * DASH_DELAY,
-        }));
-        const start = clamp(d * STAGGER + (rand(i, 0, 4) - .5) * COL_SCATTER, 0, STAGGER);
-        cols.push({ el: col, ghost, start, dashes, width: .3 + .25 * rand(i, 0, 5), fixed: d <= 0 });
-        if (d > 0) {
-          col.style.webkitMaskRepeat = col.style.maskRepeat = 'no-repeat';
-          col.style.webkitMaskSize = col.style.maskSize = '100% 100%';
-        }
-      }
-      built = null;
+      const box = title.getBoundingClientRect(), half = box.width / 2;
+      letters.forEach(l => {
+        l.el.style.transform = l.el.style.opacity = '';
+        const r = l.el.getBoundingClientRect();
+        // 0 at the centre, 1 at the left edge; letters right of the centre stay put
+        const d = (half - (r.left + r.width / 2 - box.left)) / half;
+        l.fixed = d <= 0;
+        l.start = clamp(d) * STAGGER;
+      });
       shown = null;
       update();
     }
@@ -1678,45 +1641,11 @@
     }
 
     function draw(p) {
-      const done = p >= 1;
-      if (done !== built) {                                   // swap to the real text once complete
-        built = done;
-        title.classList.toggle('is-building', !done);
-        layer.style.display = done ? 'none' : '';
-      }
-      if (done) return;
-      const cell = CELL_H * em;
-      cols.forEach(c => {
-        if (c.fixed) return;                                  // right half: always visible
-        const t = clamp((p - c.start) / (1 - STAGGER));     // same duration for every column
-        const merge = smooth(.6, 1, t);
-        const h = c.el.clientHeight;
-        c.el.style.clipPath = `inset(0 ${((1 - (c.width + (1 - c.width) * merge)) * 50).toFixed(2)}%)`;
-        c.ghost.style.opacity = (GHOST * (1 - smooth(.4, .65, t))).toFixed(3);   // gone before the dashes widen
-        if (merge >= 1) {
-          c.el.style.webkitMaskImage = c.el.style.maskImage = 'none';
-          return;
-        }
-        // Each dash rises from below on its own schedule; the text never moves
-        const spans = [];
-        c.dashes.forEach(dash => {
-          const td = clamp((t - dash.delay) / (1 - DASH_DELAY));
-          const rise = (1 - easeOutQuint(td)) * (h + cell * (1 + DASH_JITTER));   // starts fully below the column
-          const y0 = dash.y + (dash.home - dash.y) * merge + rise;
-          const y1 = y0 + dash.len + (cell + 1 - dash.len) * merge;
-          if (y0 < h && y1 > 0) spans.push([Math.max(0, y0), Math.min(h, y1)]);
-        });
-        spans.sort((a, b) => a[0] - b[0]);
-        const stops = [];
-        let open = null;
-        spans.forEach(([a, b]) => {                           // join overlapping dashes
-          if (open && a <= open[1]) open[1] = Math.max(open[1], b);
-          else { if (open) stops.push(open); open = [a, b]; }
-        });
-        if (open) stops.push(open);
-        const g = stops.map(([a, b]) => `transparent ${a.toFixed(1)}px, #000 ${a.toFixed(1)}px, #000 ${b.toFixed(1)}px, transparent ${b.toFixed(1)}px`);
-        c.el.style.webkitMaskImage = c.el.style.maskImage =
-          `linear-gradient(to bottom, ${g.length ? g.join(', ') : 'transparent 0, transparent 100%'})`;
+      letters.forEach(l => {
+        if (l.fixed) return;
+        const t = clamp((p - l.start) / (1 - STAGGER));   // same duration for every letter
+        l.el.style.transform = t >= 1 ? '' : `translateY(${(-(1 - easeOutCubic(t)) * DROP).toFixed(3)}em)`;
+        l.el.style.opacity = t >= 1 ? '' : smooth(0, .45, t).toFixed(3);
       });
     }
     return { layout, update };
