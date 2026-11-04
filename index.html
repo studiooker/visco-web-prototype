@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visco — Web Prototype</title>
+<style>
+  @font-face {
+    font-family: "Denim INK WD";
+    src: local("DenimINKWD-TRIAL-Medium"),
+         url("assets/fonts/DenimINKWD-TRIAL-Medium.otf") format("opentype");
+    font-weight: 500;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Denim INK WD";
+    src: local("DenimINKWD-TRIAL-Regular"),
+         url("assets/fonts/DenimINKWD-TRIAL-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Test Die Grotesk A";
+    src: local("TestDieGrotesk-A-Regular"),
+         url("assets/fonts/TestDieGrotesk-A-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-display: block;
+  }
+
+  :root {
+    --visco-surface-accent: #3941d9;
+    --visco-text-on-dark: #fff;
+    --visco-space-xs: 6px;
+    --visco-surface-panel: #252424;
+    --visco-surface-page: #fff;
+    /* Figma frames render the films at ~67.5% brightness over the black hero */
+    --film-dim: rgba(0, 0, 0, 0.325);
+    --font-display: "Denim INK WD", system-ui, sans-serif;
+    --font-ui: "Test Die Grotesk A", system-ui, sans-serif;
+    --section-pad: 24px;
+    --header-h: 86px;   /* 24 + 38 + 24 */
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #000; color: #fff; }
+  body { -webkit-font-smoothing: antialiased; }
+
+  /* ---------- Scroll track ---------- */
+  .scroller { position: relative; height: 500vh; background: var(--visco-surface-panel); } /* 1 screen + 2 segments × 200vh */
+  .stage {
+    position: sticky; top: 0;
+    height: 100vh; max-height: 1280px;
+    /* Inset like .benefits, starting below the fixed header */
+    padding: var(--header-h) var(--section-pad) 0;
+  }
+  .frame {
+    position: relative; height: 100%;
+    background: #000; border-radius: 4px; overflow: clip;
+  }
+
+  /* ---------- Films ---------- */
+  .film {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    will-change: clip-path;
+  }
+  .film[data-film="2"], .film[data-film="3"] { clip-path: inset(50% 50%); }
+  .dim { position: absolute; inset: 0; background: var(--film-dim); pointer-events: none; }
+  /* Bar-grid transition (WebGL); film dimming is applied in the shader */
+  .fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; visibility: hidden; }
+
+  /* ---------- Titles ---------- */
+  .title {
+    position: absolute; left: 50%; top: 50%;
+    margin: 0;
+    font-family: var(--font-display); font-weight: 500;
+    line-height: 1; text-align: center; color: #fff;
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+  }
+  .title--hero {
+    font-size: clamp(32px, 4.544vw, 92px);    /* 65.44 @ 1440 */
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .title--sub {
+    font-size: clamp(24px, 2.808vw, 56px);    /* 40.44 @ 1440 */
+    letter-spacing: -0.02em;
+    width: min(calc(100% - 32px), max(897.326px, 62.31vw));
+  }
+  .title--sub.is-narrow { width: min(calc(100% - 32px), max(733.916px, 50.97vw)); }
+
+  /* ---------- Right-hand progress nav ---------- */
+  .progress {
+    position: absolute; right: 20px; top: 50%;
+    width: 1px; height: 68.688px;
+    transform: translateY(-50%);
+  }
+  .progress__bar {
+    position: absolute; left: 0; width: 1px; height: 20px;
+    background: #fff; opacity: .4;
+    border: 0; padding: 0; cursor: pointer;
+  }
+  .progress__bar::after { content: ""; position: absolute; inset: -4px -10px; } /* larger hit area */
+  .progress__bar:nth-child(1) { top: 0; }
+  .progress__bar:nth-child(2) { top: 24.34px; }
+  .progress__bar:nth-child(3) { top: 48.69px; }
+  .progress__thumb {
+    position: absolute; left: 0; top: 0; width: 1px; height: 20px;
+    background: #fff; pointer-events: none;
+    will-change: transform;
+  }
+
+  /* ---------- Header ---------- */
+  .header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 24px 24px 32px;
+  }
+  .logo { position: relative; width: 125.506px; height: 32px; flex-shrink: 0; display: block; }
+  .logo img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; max-width: none; }
+  .logo__symbol { position: absolute; top: 0; bottom: 0; left: 0; right: 77.15%; }
+
+  .nav {
+    position: relative;
+    display: flex; align-items: flex-start; gap: 6px;
+    padding: 0 var(--visco-space-xs);
+    border-radius: 3px; overflow: clip; flex-shrink: 0;
+  }
+  .nav::before {
+    content: ""; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
+    background: rgba(133, 133, 133, .25); mix-blend-mode: difference;
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  }
+  .nav__btn {
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 16px; border: 0; background: none; border-radius: 2px;
+    font: 400 15px/1.45 var(--font-ui); color: #fff; white-space: nowrap;
+    cursor: pointer; text-decoration: none; position: relative;
+  }
+  .nav__burger { padding: 8px; align-self: stretch; }
+  .hamburger { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 28px; }
+  .hamburger span { display: block; height: 0.778px; width: 21.774px; background: #d9d9d9; }
+
+  .cta {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 8px 16px; border-radius: 3px; flex-shrink: 0;
+    font: 400 15px/1.45 var(--font-ui); color: var(--visco-text-on-dark);
+    white-space: nowrap; text-decoration: none;
+  }
+  .cta--solid { background: #000; }
+  .icon-expand { position: relative; width: 20px; height: 20px; flex-shrink: 0; }
+  .icon-expand__art { position: absolute; inset: 11.46%; overflow: clip; }
+  .icon-expand__clip { position: absolute; inset: 0 1.05% 1.05% 0; }
+  .icon-expand__group {
+    position: absolute; inset: 0 1.02% 1.03% 0;
+    -webkit-mask: url("assets/expand-mask.svg") 0 0 / 15.254px 15.254px no-repeat;
+            mask: url("assets/expand-mask.svg") 0 0 / 15.254px 15.254px no-repeat;
+  }
+  .icon-expand__group img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; max-width: none; }
+
+  /* ---------- Bottom CTAs ---------- */
+  .bottom-ctas { position: absolute; left: 0; right: 0; bottom: 30px; height: 38px; }
+  .bottom-ctas .cta { position: absolute; top: 0; }
+  .bottom-ctas .cta:first-child { right: calc(50% + 8.75px); }
+  .bottom-ctas .cta:last-child  { left:  calc(50% + 8.75px); }
+  .bottom-ctas__divider {
+    position: absolute; left: 50%; top: 50%;
+    width: 27.1849px; height: 1px;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  .bottom-ctas__divider img { display: block; width: 27.1849px; height: 1px; }
+
+  /* ---------- Benefits (tabs beside media) ---------- */
+  .benefits { background: var(--visco-surface-panel); padding: 96px 24px; }
+  .benefits__row { display: flex; gap: 24px; align-items: flex-start; min-height: 561.18px; }
+  .benefits__tabs { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 36px; }
+  .benefits__media {
+    flex: 1 0 0; min-width: 0; height: 561px;
+    position: relative; border-radius: 4px; overflow: clip;
+  }
+  .benefits__media-item {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    opacity: 0; transition: opacity .8s ease;
+  }
+  .benefits__media-item.is-active { opacity: 1; }
+
+  .tab {
+    display: flex; gap: 12px; align-items: flex-start;
+    width: 100%; max-width: 500px; padding: 0;
+    border: 0; background: none; text-align: left; color: #fff; cursor: pointer; font: inherit;
+    opacity: .5; transition: opacity .3s ease;
+  }
+  .tab:hover, .tab.is-active { opacity: 1; }
+  .tab:focus-visible { outline: 1px solid #fff; outline-offset: 6px; }
+  /* Vertical track; the bright indicator fills it while the tab is active */
+  .tab__track {
+    position: relative; align-self: stretch; flex-shrink: 0;
+    width: 0.726px; margin: 14px 0 4px;
+    background: rgba(217, 217, 217, .33);
+  }
+  .tab__indicator {
+    position: absolute; left: 0; top: -1px; width: 100%; height: calc(100% + 1px);
+    background: #d9d9d9; transform: scaleY(0); transform-origin: top;
+  }
+  .tab__num {
+    flex: 0 0 72px; height: 48px;
+    font: 500 32px/48px var(--font-display); color: var(--visco-text-on-dark); opacity: .5;
+  }
+  .tab__text { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; opacity: .5; transition: opacity .3s ease; }
+  .tab.is-active .tab__text { opacity: 1; }
+  .tab__title { font: 500 32px/48px var(--font-display); color: var(--visco-text-on-dark); }
+  .tab__desc { font: 400 15px/19.765px var(--font-ui); color: #fff; }
+  .tab.is-active .tab__indicator { animation: benefits-progress var(--benefits-duration, 6s) linear forwards; }
+  .benefits.is-paused .tab__indicator { animation-play-state: paused; }
+  @keyframes benefits-progress { to { transform: scaleY(1); } }
+  @media (prefers-reduced-motion: reduce) {
+    .tab.is-active .tab__indicator { animation: none; transform: scaleY(1); }
+    .tab, .tab__text, .benefits__media-item { transition: none; }
+  }
+
+  @media (max-width: 900px) {
+    .nav__btn:not(.nav__burger) { display: none; }
+    .title--hero { white-space: normal; width: calc(100% - 32px); }
+    :root { --section-pad: 16px; --header-h: 70px; } /* 16 + 38 + 16 */
+    .header { padding: 16px; }
+    .progress { right: 12px; }
+
+    /* Benefits: media on top, tabs stacked underneath */
+    .benefits { padding: 48px var(--section-pad); }
+    .benefits__row { flex-direction: column; gap: 32px; min-height: 0; }
+    .benefits__media { order: -1; flex: none; width: 100%; height: 300px; }
+    .benefits__tabs { flex: none; width: 100%; gap: 28px; }
+    .tab { max-width: none; }
+    .tab__num { flex-basis: 48px; font-size: 24px; line-height: 36px; height: 36px; }
+    .tab__title { font-size: 24px; line-height: 36px; }
+    .tab__track { margin-top: 10px; }
+  }
+  @media (max-width: 560px) {
+    .header .cta--solid > span:first-child { display: none; }
+    .header .cta--solid { padding: 9px; }
+    .bottom-ctas .cta { padding: 8px 4px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a class="logo" href="#" aria-label="Visco">
+    <img src="assets/logo.svg" alt="">
+    <span class="logo__symbol"><img src="assets/symbol.svg" alt=""></span>
+  </a>
+  <nav class="nav" aria-label="Primary">
+    <a class="nav__btn" href="#">Platform</a>
+    <a class="nav__btn" href="#">Cases</a>
+    <a class="nav__btn" href="#">Approach</a>
+    <button class="nav__btn nav__burger" type="button" aria-label="Menu">
+      <span class="hamburger"><span></span><span></span></span>
+    </button>
+  </nav>
+  <a class="cta cta--solid" href="#">
+    <span>Talk to an expert</span>
+    <span class="icon-expand" aria-hidden="true">
+      <span class="icon-expand__art"><span class="icon-expand__clip"><span class="icon-expand__group"><img src="assets/expand.svg" alt=""></span></span></span>
+    </span>
+  </a>
+</header>
+
+<main>
+  <section class="scroller" id="hero">
+    <div class="stage"><div class="frame">
+      <video class="film" data-film="1" src="assets/video/1video.mp4" muted playsinline loop preload="auto"></video>
+      <video class="film" data-film="2" src="assets/video/2video_2.mp4" muted playsinline loop preload="auto"></video>
+      <video class="film" data-film="3" src="assets/video/3video_1.mp4" muted playsinline loop preload="auto"></video>
+      <div class="dim"></div>
+      <canvas class="fx" aria-hidden="true"></canvas>
+
+      <h1 class="title title--hero" data-title="0">One operational flow</h1>
+      <p class="title title--sub" data-title="1">Enter the full picture. Visco connects drawings, scans, models, systems, data and workflows in one visual operational environment.</p>
+      <p class="title title--sub is-narrow" data-title="2">Helping teams understand complex work, coordinate around it and move forward with confidence.</p>
+
+      <div class="progress" role="tablist" aria-label="Hero sections">
+        <button class="progress__bar" type="button" data-goto="0" aria-label="Section 1"></button>
+        <button class="progress__bar" type="button" data-goto="1" aria-label="Section 2"></button>
+        <button class="progress__bar" type="button" data-goto="2" aria-label="Section 3"></button>
+        <span class="progress__thumb"></span>
+      </div>
+
+      <div class="bottom-ctas">
+        <a class="cta" href="#">Talk to an expert</a>
+        <span class="bottom-ctas__divider" aria-hidden="true"><img src="assets/line5.svg" alt=""></span>
+        <a class="cta" href="#">Explore Visco Workbench</a>
+      </div>
+    </div></div>
+  </section>
+  <section class="benefits" aria-label="Benefits">
+    <div class="benefits__row">
+      <div class="benefits__tabs" role="tablist" aria-label="Benefits" aria-orientation="vertical">
+          <button class="tab" type="button" role="tab" aria-controls="benefits-media" data-media="drone">
+            <span class="tab__track"><span class="tab__indicator"></span></span>
+            <span class="tab__num">01</span>
+            <span class="tab__text">
+              <span class="tab__title">See the full picture</span>
+              <span class="tab__desc">Bring the asset, the information and the work together in one visual environment.</span>
+            </span>
+          </button>
+          <button class="tab" type="button" role="tab" aria-controls="benefits-media" data-media="screen">
+            <span class="tab__track"><span class="tab__indicator"></span></span>
+            <span class="tab__num">02</span>
+            <span class="tab__text">
+              <span class="tab__title">Find what matters fast</span>
+              <span class="tab__desc">Move directly from the big picture to the asset, drawing, data or detail you need.</span>
+            </span>
+          </button>
+          <button class="tab" type="button" role="tab" aria-controls="benefits-media" data-media="tablet">
+            <span class="tab__track"><span class="tab__indicator"></span></span>
+            <span class="tab__num">03</span>
+            <span class="tab__text">
+              <span class="tab__title">Work in context</span>
+              <span class="tab__desc">See information where it belongs, around the physical environment, the task and the people doing the work.</span>
+            </span>
+          </button>
+          <button class="tab" type="button" role="tab" aria-controls="benefits-media" data-media="drone">
+            <span class="tab__track"><span class="tab__indicator"></span></span>
+            <span class="tab__num">04</span>
+            <span class="tab__text">
+              <span class="tab__title">Move straight to execution</span>
+              <span class="tab__desc">Turn operational understanding into clearer decisions, better coordination and more confident execution.</span>
+            </span>
+          </button>
+      </div>
+      <div class="benefits__media" id="benefits-media" role="tabpanel">
+        <video class="benefits__media-item" data-media="drone" src="assets/video/benefits-drone.mp4" muted playsinline loop preload="metadata" aria-label="Drone shot over an industrial site at night."></video>
+        <video class="benefits__media-item" data-media="tablet" src="assets/video/benefits-tablet.mp4" muted playsinline loop preload="metadata" aria-label="Worker in a high-visibility jacket using a tablet at night."></video>
+        <img class="benefits__media-item" data-media="screen" src="assets/benefits-controls.webp" alt="Hands on physical control knobs placed on a large touchscreen showing a sea chart.">
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const DESIGN_W = 1440;
+  const BAR_STEP = 24.345;              // distance between progress bars
+  const TRANSITIONS = 2;
+  const params = new URLSearchParams(location.search);
+  // Wave shape of the dash transition: blobs (default), ?shape=diamond, ?shape=v or ?shape=wipe
+  const SHAPES = { diamond: 0, v: 1, wipe: 2, blobs: 3 };
+  const SHAPE = SHAPES[params.get('shape')] ?? SHAPES.blobs;
+  // Each scroll segment: rest | transition | rest. Everything animates inside [START, END].
+  // Wipe and blobs are quicker: 40vh instead of 80vh, with the titles moving in the same window.
+  const QUICK = SHAPE === SHAPES.wipe || SHAPE === SHAPES.blobs;
+  const [TRANSITION_START, TRANSITION_END] = QUICK ? [.4, .6] : [.3, .7];
+
+  const scroller = document.getElementById('hero');
+  const films = [...document.querySelectorAll('.film')];
+  const titles = [...document.querySelectorAll('[data-title]')];
+  const thumb = document.querySelector('.progress__thumb');
+
+  // Resting "line" each incoming film starts from (Figma: film2 775.8×2.05, film3 807.8×2.96 on a 1440 frame)
+  const LINES = { 2: { w: 775.819 / DESIGN_W, h: 2.052 }, 3: { w: 807.824 / DESIGN_W, h: 2.958 } };
+
+  // Per-title motion, taken from the three Figma states (offsets in design px at 1440 wide)
+  //   enter: y offset it fades up from; exit: y offset it fades up to; exitScale: size it shrinks to
+  const TITLE_MOTION = [
+    { in: null, out: 0, exit: -120, exitScale: 65.44 / 85.44 },
+    { in: 0,    out: 1, enter: 80, exit: -110, exitScale: 1 },
+    { in: 1,    out: null, enter: 40 },
+  ];
+
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const range = (v, a, b) => clamp((v - a) / (b - a));
+  const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+  /* ---------------- Bar-grid transition ----------------
+     Inspired by the "5th element" motion: vertical dashes appear in random
+     blobs. Each dash masks in the incoming film, then the dashes widen and
+     merge into the full frame.
+     ?shape=diamond grows a diamond from the centre instead,
+     ?shape=v a V-shaped edge rising from the bottom,
+     ?shape=wipe a straight edge sweeping from bottom to top.
+     ?transition=line falls back to the Figma line reveal. */
+  const fx = params.get('transition') === 'line'
+    ? null
+    : createBarTransition(document.querySelector('.fx'), SHAPE);
+
+  function createBarTransition(canvas, shape) {
+    const gl = canvas.getContext('webgl', { alpha: false, antialias: false, premultipliedAlpha: false });
+    if (!gl) return null;
+
+    const VERT = `
+      attribute vec2 aPos;
+      void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+    const FRAG = `
+      precision highp float;
+      uniform sampler2D uFrom, uTo;
+      uniform vec2  uRes;       // canvas px
+      uniform vec2  uCell;      // grid cell px
+      uniform vec2  uCoverFrom, uCoverTo;  // object-fit: cover scale per film
+      uniform float uProg;      // 0 … 1
+      uniform float uShape;     // 0 = diamond from the centre, 1 = V edge rising from the bottom, 2 = straight wipe up, 3 = random blobs
+      uniform float uSeed;      // varies the blob pattern per transition
+
+      const float DIM  = 0.675;                      // matches .dim overlay
+      const float BAND = 0.14;                       // wavefront thickness (~3 cols / ~1 row at 1440×810)
+      const float JIT  = 0.0;                        // per-cell edge raggedness (0 = clean stepped edge)
+      const float DIAMOND = 1.0;                     // wave shape: 0 = rectangle, 1 = diamond
+      const float DIAMOND_TALL = 1.0;                // diamond height ÷ width
+      const float V_DEPTH = 0.7;                     // V: how far the centre trails the sides, × frame height
+      const float BLOB_COUNT = 4.0;                  // blobs: roughly how many across the frame
+      const float BLOB_TALL = 1.6;                   // blobs: height ÷ width
+      const float BLOB_BAND = 0.3;                   // blobs: wider band, so dashes build up and merge gradually
+
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+
+      // Smooth value noise for the blob field
+      float vnoise(vec2 p) {
+        vec2 i = floor(p), f = fract(p);
+        vec2 s = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), s.x),
+                   mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), s.x), s.y);
+      }
+
+      vec3 film(sampler2D tex, vec2 uv, vec2 cover) {
+        return texture2D(tex, (uv - 0.5) / cover + 0.5).rgb * DIM;
+      }
+
+      float box(vec2 p, vec2 hs, vec2 aa) {
+        vec2 q = smoothstep(hs + aa, hs - aa, abs(p));
+        return q.x * q.y;
+      }
+
+      void main() {
+        vec2 frag = gl_FragCoord.xy;
+        vec2 uv   = frag / uRes;
+        vec2 rel  = frag - uRes * 0.5;                      // grid anchored on the centre
+        vec2 shift = vec2(0.0, mod(floor(rel.x / uCell.x), 2.0) * 0.5 * uCell.y); // every other column offset by half a cell
+        vec2 id   = floor((rel + shift) / uCell);
+        vec2 cuv  = (rel + shift) / uCell - id - 0.5;       // -0.5 … 0.5 inside the cell
+        vec2 cc   = ((id + 0.5) * uCell - shift + uRes * 0.5) / uRes;
+
+        // Distance from the centre: 0 in the middle, 1 where the wave leaves the frame
+        // (rectangle reaches the edges all at once; diamond is measured in pixels so its
+        // proportions hold on any screen, and reaches the corners last)
+        vec2  e    = abs(cc - 0.5) * 2.0;
+        vec2  px   = abs(cc - 0.5) * uRes;
+        float dia  = (px.x + px.y / DIAMOND_TALL) / (0.5 * uRes.x + 0.5 * uRes.y / DIAMOND_TALL);
+        float d    = mix(max(e.x, e.y), dia, DIAMOND);
+        // V: 0 at the bottom corners, 1 at the top centre, so the edge rises as a V
+        // with the sides leading and the centre V_DEPTH behind
+        float dV   = (cc.y + V_DEPTH * (1.0 - e.x)) / (1.0 + V_DEPTH);
+        // Blobs: a soft noise field, BLOB_COUNT blobs across and stretched vertically;
+        // its low points light up first and grow outwards
+        vec2  q    = vec2(cc.x, cc.y * uRes.y / uRes.x / BLOB_TALL) * BLOB_COUNT + uSeed * 17.31;
+        float nb   = 0.65 * vnoise(q) + 0.35 * vnoise(q * 2.3 + 5.1);
+        float dB   = clamp((nb - 0.15) / 0.7, 0.0, 1.0);   // gentle stretch: few areas switch all at once
+        if (uShape > 2.5)      d = dB;
+        else if (uShape > 1.5) d = cc.y;   // wipe: 0 at the bottom, 1 at the top
+        else if (uShape > 0.5) d = dV;
+        float band = uShape > 2.5 ? BLOB_BAND : BAND;
+        float n  = hash(id);
+        float r  = uProg * (1.0 + band + JIT);
+        float L  = clamp((r - d - n * JIT) / band, 0.0, 1.0);
+
+        vec3 a = film(uFrom, uv, uCoverFrom);
+        vec3 b = film(uTo,   uv, uCoverTo);
+
+        // Phases per cell: thin dashes appear at the leading edge → thicken → widen into the full frame
+        float on    = smoothstep(0.0, 0.08, L);
+        float thick = smoothstep(0.08, 0.2, L);
+        float widen = smoothstep(0.3, 1.0, L);
+
+        // Dash geometry from the reference: ~42% of the cell wide, ~90% tall,
+        // starting as hairlines at the leading edge and filling the cell behind the wave
+        float w = mix(mix(0.14, 0.42, thick), 1.02, widen);
+        float h = mix(0.9, 1.02, widen);
+        float dash = box(cuv * uCell, vec2(w, h) * uCell * 0.5, vec2(0.75));
+
+        // The dashes are windows onto the incoming film, the outgoing film stays around them
+        vec3 col = mix(a, b, dash * on);
+        col = mix(col, b, smoothstep(0.92, 1.0, L));
+        gl_FragColor = vec4(col, 1.0);
+      }`;
+
+    const compile = (type, src) => {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    };
+    const prog = gl.createProgram();
+    try {
+      gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    } catch (e) { console.warn('Bar transition disabled:', e); return null; }
+    gl.useProgram(prog);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const aPos = gl.getAttribLocation(prog, 'aPos');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    const u = name => gl.getUniformLocation(prog, name);
+    const U = { from: u('uFrom'), to: u('uTo'), res: u('uRes'), cell: u('uCell'),
+                coverFrom: u('uCoverFrom'), coverTo: u('uCoverTo'), prog: u('uProg'), seed: u('uSeed') };
+    gl.uniform1f(u('uShape'), shape);
+
+    const textures = [0, 1].map(unit => {
+      const t = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      return t;
+    });
+    gl.uniform1i(U.from, 0);
+    gl.uniform1i(U.to, 1);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+    // Cell proportions from the reference (2.65× taller than wide), at about twice its scale
+    const CELL_W = .018, CELL_RATIO = 2.65, CELL_MIN = 14;
+    const dpr = () => Math.min(window.devicePixelRatio || 1, 1.5);
+
+    function resize() {
+      const w = Math.round(canvas.clientWidth * dpr()), h = Math.round(canvas.clientHeight * dpr());
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      gl.viewport(0, 0, w, h);
+      const cw = Math.max(CELL_MIN, canvas.clientWidth * CELL_W) * dpr();
+      gl.uniform2f(U.res, w, h);
+      gl.uniform2f(U.cell, cw, cw * CELL_RATIO);
+    }
+
+    // object-fit: cover → how much the film's UVs are scaled inside the frame
+    function cover(v) {
+      const va = (v.videoWidth / v.videoHeight) || 16 / 9;
+      const ca = canvas.width / canvas.height;
+      return ca > va ? [1, ca / va] : [va / ca, 1];
+    }
+
+    function upload(unit, v) {
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, textures[unit]);
+      if (v.readyState >= 2) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, v);
+    }
+
+    let state = null, raf = 0;
+    function draw() {
+      raf = 0;
+      if (!state) return;
+      resize();
+      upload(0, state.from);
+      upload(1, state.to);
+      gl.uniform2f(U.coverFrom, ...cover(state.from));
+      gl.uniform2f(U.coverTo, ...cover(state.to));
+      gl.uniform1f(U.prog, state.t);
+      gl.uniform1f(U.seed, state.seed);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      canvas.style.visibility = 'visible';
+      raf = requestAnimationFrame(draw);       // keep the films moving while the wave is on screen
+    }
+
+    return {
+      set(next) {
+        state = next;
+        if (!state) { canvas.style.visibility = 'hidden'; return; }
+        if (!raf) raf = requestAnimationFrame(draw);
+      },
+    };
+  }
+
+  /* ---------------- Scroll ---------------- */
+  function progress() {
+    const r = scroller.getBoundingClientRect();
+    const span = scroller.offsetHeight - window.innerHeight;
+    return clamp(-r.top / span) * TRANSITIONS;   // 0 … 2
+  }
+
+  // 0 … 1 progress of transition i at scroll progress p
+  const transitionT = (p, i) => range(p - i, TRANSITION_START, TRANSITION_END);
+
+  function render(p) {
+    const k = clamp(window.innerWidth / DESIGN_W, .45, 1.6);
+
+    if (fx) {
+      // Bar-grid wave: films are swapped whole, the canvas draws the transition between them
+      let active = null;
+      films.forEach(v => {
+        const n = +v.dataset.film;
+        if (n === 1) return;
+        const t = transitionT(p, n - 2);
+        if (t > 0 && t < 1) active = { from: films[n - 2], to: v, t, seed: n };
+        v.style.clipPath = t >= 1 ? 'none' : 'inset(50% 50%)';
+      });
+      fx.set(active);
+    } else {
+      // Films 2 & 3 open from a thin centred line to full frame
+      films.forEach(v => {
+        const n = +v.dataset.film;
+        if (n === 1) return;
+        const t = transitionT(p, n - 2);
+        const line = LINES[n];
+        const ix = (1 - line.w) / 2 * 100 * (1 - easeOut(t));
+        const iy = `calc((50% - ${line.h / 2}px) * ${1 - easeInOut(t)})`;
+        v.style.clipPath = `inset(${iy} ${ix}% ${iy} ${ix}%)`;
+      });
+    }
+
+    // Titles fade up and out / fade up and in
+    titles.forEach((el, i) => {
+      const m = TITLE_MOTION[i];
+      let y = 0, s = 1, o = 1;
+      if (m.in !== null) {
+        const t = easeOut(range(transitionT(p, m.in), .5, 1));
+        y += m.enter * (1 - t); o = t;
+      }
+      if (m.out !== null) {
+        const t = easeInOut(range(transitionT(p, m.out), 0, .5));
+        y += m.exit * t; s = 1 + (m.exitScale - 1) * t; o *= 1 - t;
+      }
+      el.style.opacity = o.toFixed(3);
+      el.style.transform = `translate(-50%, calc(-50% + ${(y * k).toFixed(2)}px)) scale(${s.toFixed(4)})`;
+      el.style.visibility = o < .002 ? 'hidden' : 'visible';
+    });
+
+    // Right-hand nav thumb slides down/up with the scroll
+    const seg = Math.min(Math.floor(p), TRANSITIONS - 1);
+    const pos = seg + easeInOut(transitionT(p, seg));
+    thumb.style.transform = `translateY(${(pos * BAR_STEP).toFixed(2)}px)`;
+  }
+
+  // The effects ease towards the scroll position instead of jumping with each
+  // wheel step, so short transitions still play smoothly.
+  const SCROLL_SMOOTHING_MS = 250;
+  let shown = progress(), followRaf = 0, lastFrame = 0;
+  function follow(now) {
+    const target = progress();
+    const dt = lastFrame ? now - lastFrame : 16;
+    lastFrame = now;
+    shown += (target - shown) * (1 - Math.exp(-dt / SCROLL_SMOOTHING_MS));
+    if (Math.abs(target - shown) < 1e-4) shown = target;
+    render(shown);
+    if (shown === target) { followRaf = 0; lastFrame = 0; }
+    else followRaf = requestAnimationFrame(follow);
+  }
+  const onScroll = () => { if (!followRaf) followRaf = requestAnimationFrame(follow); };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  render(shown);
+
+  document.querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const span = scroller.offsetHeight - window.innerHeight;
+      const top = scroller.offsetTop + span * (+btn.dataset.goto / TRANSITIONS);
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+  });
+
+  /* ---------------- Video sync ----------------
+     One virtual clock drives all three films. It only advances while every
+     film can play, small drift is absorbed with playbackRate, large drift is
+     corrected with a seek. Films have slightly different durations (9.99s vs
+     10.03s), so the clock loops on the shortest one. */
+  const MAX_RATE_NUDGE = .08;
+  const SEEK_THRESHOLD = .25;
+  let duration = Infinity, clock = 0, last = null, started = false;
+
+  const ready = films.map(v => new Promise(res => {
+    if (v.readyState >= 3) return res();
+    v.addEventListener('canplay', res, { once: true });
+  }));
+  films.forEach(v => v.addEventListener('loadedmetadata', () => {
+    duration = Math.min(duration, v.duration);
+  }));
+
+  Promise.all(ready).then(() => {
+    duration = Math.min(...films.map(v => v.duration));
+    films.forEach(v => { v.currentTime = 0; });
+    return Promise.all(films.map(v => v.play().catch(() => {})));
+  }).then(() => { started = true; requestAnimationFrame(sync); });
+
+  function sync(now) {
+    if (last !== null) {
+      const allPlaying = films.every(v => !v.paused && v.readyState >= 3 && !v.seeking);
+      if (allPlaying) clock = (clock + (now - last) / 1000) % duration;
+    }
+    last = now;
+
+    films.forEach(v => {
+      if (v.paused && !document.hidden) v.play().catch(() => {});
+      let drift = v.currentTime - clock;
+      if (drift >  duration / 2) drift -= duration;   // wrapped around the loop point
+      if (drift < -duration / 2) drift += duration;
+      if (Math.abs(drift) > SEEK_THRESHOLD || v.currentTime > duration) {
+        v.currentTime = clock;
+        v.playbackRate = 1;
+      } else {
+        v.playbackRate = 1 - clamp(drift * 2, -MAX_RATE_NUDGE, MAX_RATE_NUDGE);
+      }
+    });
+    requestAnimationFrame(sync);
+  }
+
+  // Re-align after the tab was hidden (browsers pause/throttle background video)
+  document.addEventListener('visibilitychange', () => {
+    if (!started || document.hidden) return;
+    clock = films[0].currentTime % duration;
+    last = null;
+  });
+
+  /* ---------------- Benefits tabs ----------------
+     The active tab's track fills over BENEFITS_MS, then the next tab takes
+     over. Clicking a tab jumps to it and restarts the timer. The timer
+     pauses while the section is off screen. */
+  const BENEFITS_MS = 6000;
+  const benefits = document.querySelector('.benefits');
+  const tabs = [...benefits.querySelectorAll('.tab')];
+  const media = [...benefits.querySelectorAll('.benefits__media-item')];
+  const autoplay = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  benefits.style.setProperty('--benefits-duration', `${BENEFITS_MS}ms`);
+
+  function selectTab(index) {
+    tabs.forEach((tab, i) => {
+      const active = i === index;
+      tab.classList.remove('is-active');
+      tab.setAttribute('aria-selected', active);
+      tab.tabIndex = active ? 0 : -1;
+    });
+    void tabs[index].offsetWidth;       // restart the progress animation
+    tabs[index].classList.add('is-active');
+    media.forEach(m => m.classList.toggle('is-active', m.dataset.media === tabs[index].dataset.media));
+    syncVideos();
+  }
+
+  let onScreen = false;
+  function syncVideos() {
+    media.forEach(m => {
+      if (m.tagName !== 'VIDEO') return;
+      const show = onScreen && m.classList.contains('is-active');
+      if (!show) m.pause();
+      else if (autoplay) m.play().catch(() => {});
+      else m.preload = 'auto';            // reduced motion: load the first frame, don't play
+    });
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => selectTab(i));
+    tab.querySelector('.tab__indicator').addEventListener('animationend', () => {
+      if (autoplay) selectTab((i + 1) % tabs.length);
+    });
+    tab.addEventListener('keydown', e => {
+      const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      const next = (i + step + tabs.length) % tabs.length;
+      selectTab(next);
+      tabs[next].focus();
+    });
+  });
+
+  // Pause the timer, and the videos, while the section is off screen
+  new IntersectionObserver(([entry]) => {
+    onScreen = entry.isIntersecting;
+    benefits.classList.toggle('is-paused', !onScreen);
+    syncVideos();
+  }, { threshold: .35 }).observe(benefits);
+
+  selectTab(0);
+})();
+</script>
+</body>
+</html>
