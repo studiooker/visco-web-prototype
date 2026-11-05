@@ -200,7 +200,9 @@
      it, and its image fades in. The image stays in view (sticky) on the left. */
   .gs { background: var(--visco-surface-panel); padding: 160px 24px 52px; display: flex; flex-direction: column; gap: 82px; }
   .gs__head { display: flex; flex-direction: column; align-items: center; gap: 12px; color: #fff; text-align: center; }
-  .gs__eyebrow { margin: 0; min-height: 16px; font: 400 14px/15.6px var(--font-ui); letter-spacing: 0.4222px; text-transform: uppercase; }
+  /* One eyebrow style for the whole site (Figma "Getting started"): Die Grotesk 14/15.6, 0.42px tracking, uppercase, white */
+  .gs__eyebrow, .ap-label { margin: 0; font: 400 14px/15.6px var(--font-ui); letter-spacing: 0.4222px; text-transform: uppercase; color: #fff; }
+  .gs__eyebrow { min-height: 16px; }
   .gs__title { margin: 0; font: 500 60px/72px var(--font-display); }
 
   .gs__row { position: relative; display: flex; gap: 24px; align-items: stretch; }
@@ -240,7 +242,6 @@
 
   /* ---------- Shared section parts ---------- */
   /* Small uppercase label (Figma sets it in Geist; the site uses Die Grotesk for these, as on the home page) */
-  .ap-label { margin: 0; min-height: 30px; font: 400 14px/29.647px var(--font-ui); text-transform: uppercase; color: var(--visco-text-on-dark); opacity: .5; }
   .ap-h3 { margin: 0; font: 500 32px/1.05 var(--font-display); color: #fff; }
   .ap-cta--dark { background: var(--visco-surface-panel); }
   /* Two columns: heading on the left, copy and button on the right */
@@ -282,7 +283,7 @@
 
   /* ---------- Proof (Figma 278:1993) ---------- */
   .ap-proof { background: var(--visco-surface-panel); padding: 48px 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
-  .ap-proof__row { display: flex; gap: 24px; width: 100%; margin: 0; padding: 0; list-style: none; }
+  .ap-proof__row { display: flex; gap: 24px; width: 100%; margin: 14px 0 0; padding: 0; list-style: none; }   /* cards 24px below the eyebrow */
   .ap-proof__card {
     flex: 1 0 0; min-width: 0; min-height: 146px; padding: 24px; border-radius: 4px; background: #000;
     display: flex; flex-direction: column; gap: 24px; color: #fff;

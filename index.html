@@ -291,10 +291,12 @@
 
   /* ---------- Logos ---------- */
   .logos { background: var(--visco-surface-panel); padding: 24px; display: flex; flex-direction: column; gap: 24px; }
-  .logos__eyebrow {
-    margin: 0; font: 400 15px/22.588px var(--font-ui); text-transform: uppercase;
-    color: #fff; opacity: .5; white-space: nowrap;
+  /* One eyebrow style for the whole site (Figma "Getting started"): Die Grotesk 14/15.6, 0.42px tracking, uppercase, white */
+  .logos__eyebrow, .workbench__eyebrow, .industries__eyebrow, .products__eyebrow {
+    margin: 0; font: 400 14px/15.6px var(--font-ui); letter-spacing: 0.4222px;
+    text-transform: uppercase; color: #fff;
   }
+  .logos__eyebrow { white-space: nowrap; }
   .logos__row { display: flex; align-items: center; justify-content: space-between; margin: 0; padding: 0; list-style: none; }
   .logos__row li { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .logos__row img { display: block; }
@@ -307,10 +309,6 @@
 
   /* ---------- Workbench ---------- */
   .workbench { background: var(--visco-surface-panel); padding: 96px 24px; display: flex; flex-direction: column; gap: 32px; }
-  .workbench__eyebrow {
-    margin: 0; font: 400 15px/15.6px var(--font-ui); letter-spacing: 0.4222px;
-    text-transform: uppercase; color: #fff;
-  }
   /* 12-column grid, 24px gutters: media on columns 1–6, text on 8–12 */
   .workbench__row { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; align-items: start; }
   .workbench__media { grid-column: 1 / span 6; aspect-ratio: 684 / 487; border-radius: 4.267px; overflow: clip; }
@@ -448,10 +446,7 @@
   .industries { background: var(--visco-surface-panel); padding: 48px 24px; }
   /* 12-column grid, 24px gutters: label on columns 1–4, list on 5–7, image on 9–12 */
   .industries__row { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; align-items: start; }
-  .industries__eyebrow {
-    grid-column: 1 / span 4; margin: 0;
-    font: 400 14px/normal var(--font-ui); letter-spacing: -0.28px; text-transform: uppercase; color: #fff;
-  }
+  .industries__eyebrow { grid-column: 1 / span 4; }
   .industries__list { grid-column: 5 / span 3; display: flex; flex-direction: column; gap: 32px; margin: 0; padding: 0; list-style: none; }
   .industry {
     display: flex; gap: 10px; align-items: center;
@@ -474,10 +469,6 @@
 
   /* ---------- Products (three video cards) ---------- */
   .products { background: var(--visco-surface-panel); padding: 96px 24px; display: flex; flex-direction: column; gap: 32px; }
-  .products__eyebrow {
-    margin: 0; font: 400 14px/15.6px var(--font-ui); letter-spacing: 0.4222px;
-    text-transform: uppercase; color: #fff;
-  }
   .products__row { display: flex; gap: 24px; align-items: flex-start; margin: 0; padding: 0; list-style: none; }
   .products__item { flex: 1 0 0; min-width: 0; display: flex; }
   .product {
