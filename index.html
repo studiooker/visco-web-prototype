@@ -292,7 +292,7 @@
   /* ---------- Logos ---------- */
   .logos { background: var(--visco-surface-panel); padding: 24px; display: flex; flex-direction: column; gap: 24px; }
   /* One eyebrow style for the whole site (Figma "Getting started"): Die Grotesk 14/15.6, 0.42px tracking, uppercase, white */
-  .logos__eyebrow, .workbench__eyebrow, .industries__eyebrow, .products__eyebrow {
+  .logos__eyebrow, .workbench__eyebrow, .industries__eyebrow, .products__eyebrow, .insights__eyebrow {
     margin: 0; font: 400 14px/15.6px var(--font-ui); letter-spacing: 0.4222px;
     text-transform: uppercase; color: #fff;
   }
@@ -494,6 +494,26 @@
     .product__desc, .product__shade { transition: none; }
   }
 
+  /* ---------- Insights: four article cards, 4:3 photo with text underneath ---------- */
+  .insights { background: var(--visco-surface-panel); padding: 0 24px 96px; display: flex; flex-direction: column; gap: 48px; }   /* cards 48px below the header */
+  /* Header on the 12-column grid: eyebrow on the left, intro text from column 7 (lines up with the third card) */
+  .insights__head { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; align-items: start; }
+  .insights__eyebrow { grid-column: 1 / span 6; }
+  .insights__intro { grid-column: 7 / span 6; margin: 0; font: 500 32px/1.05 var(--font-display); color: #fff; }
+  .insights__row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 0; list-style: none; }
+  .insight { display: flex; flex-direction: column; gap: 16px; color: #fff; text-decoration: none; }
+  .insight:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+  .insight__media { aspect-ratio: 4 / 3; border-radius: 4px; overflow: clip; background: #000; }
+  .insight__media img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2, .8, .2, 1); }
+  .insight:hover .insight__media img, .insight:focus-visible .insight__media img { transform: scale(1.04); }
+  .insight__text { display: flex; flex-direction: column; gap: 10px; }
+  .insight__meta { margin: 0; font: 400 14px/19.765px var(--font-ui); opacity: .5; }
+  .insight__title { margin: 0; font: 500 24px/1.05 var(--font-display); }
+  .insight__desc { margin: 0; font: 400 15px/21.8px var(--font-ui); }
+  @media (prefers-reduced-motion: reduce) {
+    .insight__media img { transition: none; }
+  }
+
   /* ---------- Closing CTA (blue card: text on the left, dash field on the right) ---------- */
   .closing { background: var(--visco-surface-panel); padding: 48px 24px; container-type: inline-size; }
   /* 1392 × 732 at 1440, never below 520px tall. Height comes from the width (cqw)
@@ -591,6 +611,18 @@
     .industries { padding: 32px var(--section-pad); }
     .industries__row { grid-template-columns: minmax(0, 1fr); }
     .industries__list, .industries__media { grid-column: 1; }
+  }
+  @media (max-width: 1100px) {
+    .insights__row { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
+  }
+  @media (max-width: 900px) {
+    .insights { padding: 0 var(--section-pad) 48px; }
+    .insights__head { grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
+    .insights__eyebrow, .insights__intro { grid-column: 1; }
+    .insights__intro { font-size: 28px; }
+  }
+  @media (max-width: 560px) {
+    .insights__row { grid-template-columns: minmax(0, 1fr); row-gap: 32px; }
   }
   @media (max-width: 900px) {
     .products { padding: 48px var(--section-pad); }
@@ -886,6 +918,47 @@
         <span class="product__shade" style="background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 12.608%, rgba(0, 0, 0, 0) 34.858%, rgba(0, 0, 0, 0) 64.102%, rgba(0, 0, 0, 0.4) 86.068%)"></span>
         <h3 class="product__title">VISCO Configure</h3>
         <p class="product__desc">Turn complex product logic into visual experiences that improve accuracy, flexibility and speed.</p>
+      </a></li>
+    </ul>
+  </section>
+  <section class="insights" aria-labelledby="insights-title">
+    <div class="insights__head">
+      <h2 class="insights__eyebrow" id="insights-title">Insights</h2>
+      <p class="insights__intro">The latest updates and learnings from the Visco team.</p>
+    </div>
+    <!-- Placeholder articles: photos reused from the site, copy to be replaced -->
+    <ul class="insights__row">
+      <li><a class="insight" href="#">
+        <span class="insight__media"><img src="assets/industries/offshore-wind.webp" width="1792" height="1008" loading="lazy" alt=""></span>
+        <div class="insight__text">
+          <span class="insight__meta"><time datetime="2026-10-28">28 October 2026</time> · Partnerships</span>
+          <h3 class="insight__title">VISCO joins forces with SAP</h3>
+          <span class="insight__desc">A new partnership brings SAP work-order data closer to the field, connecting maintenance information, asset context and execution in one environment.</span>
+        </div>
+      </a></li>
+      <li><a class="insight" href="#">
+        <span class="insight__media"><img src="assets/benefits-execution.webp" width="2000" height="1333" loading="lazy" alt=""></span>
+        <div class="insight__text">
+          <span class="insight__meta"><time datetime="2026-10-14">14 October 2026</time> · AI</span>
+          <h3 class="insight__title">AI gets useful when it gets specific</h3>
+          <span class="insight__desc">The biggest opportunity for industrial AI starts with real tasks: finding information, understanding assets and helping people act faster.</span>
+        </div>
+      </a></li>
+      <li><a class="insight" href="#">
+        <span class="insight__media"><img src="assets/industries/subsea.webp" width="1792" height="1008" loading="lazy" alt=""></span>
+        <div class="insight__text">
+          <span class="insight__meta"><time datetime="2026-09-30">30 September 2026</time> · Learnings</span>
+          <h3 class="insight__title">What we learned from putting Workbench to work</h3>
+          <span class="insight__desc">A look at the lessons, friction points and practical insights that emerge when real workflows, real data and real users meet in one operational environment.</span>
+        </div>
+      </a></li>
+      <li><a class="insight" href="#">
+        <span class="insight__media"><img src="assets/industries/infrastructure.webp" width="1792" height="1008" loading="lazy" alt=""></span>
+        <div class="insight__text">
+          <span class="insight__meta"><time datetime="2026-09-12">12 September 2026</time> · Insight</span>
+          <h3 class="insight__title">Making safety procedures visual</h3>
+          <span class="insight__desc">Step-by-step 3D instructions help crews prepare for critical tasks before they reach the site.</span>
+        </div>
       </a></li>
     </ul>
   </section>
